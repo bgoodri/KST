@@ -18,8 +18,8 @@
 # You can create any custom variable you would like, and they will be accessible
 # in the templates via {{ site.myvariable }}.
 
-title: Formalizing a Lipschitz-continuous version of Kolmogorov's superposition theorem
-#email: your-email@example.com
+title: Formalizing a Lipschitz continuous version of Kolmogorov's superposition theorem
+email: benjamin.goodrich@columbia.edu
 description: by Ben Goodrich
 baseurl: "" # the subpath of your site, e.g. /blog
 url: "https://bgoodri.github.io/KST" # the base hostname & protocol for your site, e.g. http://example.com
