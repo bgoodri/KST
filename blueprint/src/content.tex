@@ -147,7 +147,7 @@ Let $\mathbb{T} = \left[-1,1\right]$ and $t \in T$. The infinite sum in the defi
 \end{lemma}
   
 \begin{proof}
-  \uses{def:TT_recursion, lem:geometric}
+  \uses{lem:TT_recursion, lem:geometric}
   \leanok
   We utilize the Weierstrass M-test. Since $\TT{0}{t} = t \in \mathbb{T}$, Lemma \ref{lem:TT_recursion} with induction on $m$ implies that $\TT{m}{t} = 2\TT{m - 1}{r}^2 - 1 \in \mathbb{T}$. Since $\left|8^{-m} \TT{m}{t}\right| \leq 8^{-m}$ and $\sum\limits_{m = 0}^\infty 8^{-m} = \frac{8}{7}$ by Lemma \ref{lem:geometric} with $b = 8$, $\psi$ is a well-defined function on $\mathbb{T}$.
 \end{proof}
@@ -322,7 +322,7 @@ The fact that $\psi_k$ converges uniformly to $\psi$ per Lemma \ref{lem:limit} d
   If $t \in \left(-1,1\right)$, $\dot{\psi}\left(t\right)$ exists.
 \end{proposition}
 \begin{proof}
-  \uses{lem:TT_recursion, lem:inreasing}
+  \uses{lem:TT_recursion, lem:increasing}
   We start with the definition of a derivative,
   \begin{eqnarray*}
     \dot{\psi}\left(t\right) = \lim\limits_{h \rightarrow 0} \frac{\psi\left(t + h\right) - \psi\left(t\right)}{h} = 
@@ -557,3 +557,12 @@ Kahane's geometric interpretation of the KST goes like this. Let $\Gamma_p$ deno
 \end{proof}
 
 Then $\chi_q\left(\gamma\left(\Psi_q\left(x_1, x_2, \dots, x_n\right)\right)\right) = \sum\limits_{j = 0}^\infty \widehat{a}_j e^{2\pi \imath j \left(\gamma\left(\Psi_q\left(x_1, x_2, \dots, x_n\right)\right) + q\right)} = \sum\limits_{j = 0}^\infty \widehat{a}_j e^{2\pi \imath j \left(\gamma\left(\Psi_q\left(x_1, x_2, \dots, x_n\right)\right)\right)}$ because it is periodic. In practice, we would have to estimate a (truncated) sequence of coefficients to calibrate to a particular target function.
+
+\chapter*{Bibliography}
+
+    \bibliographystyle{plain} % Choose your preferred citation style
+
+    \bibliography{references}  % Name of your BibTeX file
+
+    \nocite{*}  % Include all entries in the bibliography
+
