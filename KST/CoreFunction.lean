@@ -1,123 +1,242 @@
 import Mathlib.Data.Real.Basic
-import Mathlib.Analysis.SpecialFunctions.Trigonometric.Inverse
-import Mathlib.Analysis.SpecialFunctions.Trigonometric.Chebyshev
+import Mathlib.RingTheory.Polynomial.Chebyshev
+import Mathlib.Algebra.GeomSum
+import Mathlib.Analysis.SpecialFunctions.Log.Basic
+import Mathlib.Analysis.SpecialFunctions.Log.Base
 import Mathlib.Analysis.Calculus.Deriv.Basic
 import Mathlib.Analysis.Calculus.Deriv.Add
-import Mathlib.Algebra.GeomSum
+import Mathlib.Analysis.Calculus.ContDiff.Defs
 import Mathlib.Data.Finset.Range
 import Mathlib.Topology.Instances.Real.Defs
+import Mathlib.Data.ENNReal.Basic
 import Mathlib.Topology.Defs.Filter
 import Mathlib.Topology.Basic
 import Mathlib.Order.Filter.Defs
 import Mathlib.Topology.Algebra.InfiniteSum.Defs
 import Mathlib.Algebra.BigOperators.Group.Finset.Defs
-import Init.Notation
 import LeanCopilot
 
-open Real Polynomial Filter Topology BigOperators
+open Real Polynomial Filter Topology BigOperators Finset
 
-noncomputable def TT (m : ℕ) :=
-  Chebyshev.T ℝ (2^m)
+variable (n : ℕ) [Fact (1 < n)]
+def 𝕀 : Set ℝ := Set.Icc 0 1
 
-noncomputable def ψ_term (m : ℕ) (r : ℝ): ℝ :=
-  ((TT m).eval r) / (8^m)
+noncomputable def TT (m : ℕ) := Chebyshev.T ℝ (2^m)
 
-noncomputable def ψₖ (k : ℕ) (r : ℝ): ℝ :=
+noncomputable def ϕ_term (m : ℕ) (r : ℝ): ℝ := ((TT m).eval r) / (8^m)
+
+noncomputable def ϕₖ (k : ℕ) (r : ℝ): ℝ :=
   (3 / 7 : ℝ) + (8^(-k : ℤ) / 14 : ℝ) + (1 / 2 : ℝ) *
-  (∑ m ∈ Finset.range (k + 1), ψ_term m r)
+  (∑ m ∈ Finset.range (k + 1), ϕ_term m r)
 
-noncomputable def ψ (r : ℝ): ℝ :=
-  (3 / 7 : ℝ) + (1 / 2 : ℝ) * (∑' m, ψ_term m r)
+noncomputable def ϕ (r : ℝ): ℝ := (3 / 7 : ℝ) + (1 / 2 : ℝ) * (∑' m, ϕ_term m r)
 
-lemma TT_recursion (m : ℕ) :
-  TT (m + 1) = 2 * (TT m)^2 - 1 := by
-  rw [TT, TT]
+variable (lambda : ℝ) [Fact (0 < lambda)]
+
+def Λ (n : ℕ) (lambda : ℝ) := (∑ p ∈ Finset.range n, lambda^p)
+
+noncomputable def ψ (lambda : ℝ) (p : ℕ) (q : ℕ) (n : ℕ) (xₚ : 𝕀) :=
+  (lambda^p) / (Λ n lambda) * (ϕ (xₚ - (q / (2 * n) : ℝ)))
+
+
+lemma TT_recursion (m : ℕ) : TT (m + 1) = 2 * (TT m)^2 - 1 := by {
+  unfold TT              -- Express it in terms of Chebyshev.T
   rw [Int.pow_succ 2 m]  -- Rewrite 2^(m+1) as 2^m * 2
   rw [mul_comm]          -- Rewrite 2^m * 2 as 2 * 2^m
-  -- Apply T_mul to express T_{2 * 2^m} in terms of T_{2^m}
+  -- Apply T_mul to express T_{2 * 2^m} in terms of T_2 and T_{2^m}
   rw [Chebyshev.T_mul ℝ 2 (2^m)]
   rw [Chebyshev.T_two ℝ] -- Expand T_2 to 2x^2 - 1
-  simp
+  field_simp
+}
 
--- Prove that -1/2 and 1 are fixed points of the recurrence for all m : ℕ
-lemma fixed_points (m : ℕ) (r : ℝ) (hr : r = -1/2 ∨ r = 1) :
-  (TT m).eval r = r := by
-  unfold TT
-  induction m with
-  | zero =>
-    -- Base case: T 1 = X, so T 1(-1/2) = -1/2 and T 1(1) = 1
-    cases hr with
-    | inl hr_neg_half =>
-      simp [hr_neg_half, Chebyshev.T_one]
-    | inr hr_one =>
-      simp [hr_one, Chebyshev.T_one]
-  | succ m ih =>
-    -- Inductive case: T (m + 1) = 2 * T m^2 - 1
-    rw [Int.pow_succ 2 m, mul_comm, Chebyshev.T_mul ℝ 2 (2^m), Chebyshev.T_two ℝ]
-    cases hr
-    · -- r = -1/2
-      simp [ih, Chebyshev.T_two, Chebyshev.T_one]
-      subst r
-      ring_nf
-    · -- r = 1
-      simp [ih, Chebyshev.T_two, Chebyshev.T_one]
-      subst r
-      ring_nf
-
--- Prove that the fixed points are repellent
-lemma repellent_fixed_points (m : ℕ) (r : ℝ) (hr : r = -1/2 ∨ r = 1) :
-  |(Polynomial.derivative (TT m)).eval r| > 1 := by
-  sorry
-
-lemma geometric_sum (b : ℝ) (h : b > 1) (j k : ℕ) (hjk : j ≤ k) :
-    ∑ m ∈ Finset.Ico j (k + 1), (1 / b)^(m) = (b^(1 - j) - b^(-k : ℤ)) / (b - 1) := by
-  have hb : b ≠ 1 := by linarith
-  have hb_pos : 0 < b := by linarith
-
-  rw [geom_sum_Ico]
-  · sorry
-  · simpa using hb
-  · exact Nat.le_succ_of_le hjk
-
-lemma abs_TT_le_one (r: ℝ) (hr: |r| ≤ 1):
-    ∀ m: ℕ, |(TT m).eval r| ≤ 1:= by
+lemma TT_bounds (r: ℝ) : ∀ m: ℕ, ((TT m).eval r)^2 ≤ 1 ↔ r^2 ≤ 1:= by
   intro m
   induction m with
   | zero =>
     unfold TT
     ring_nf
-    simp [Chebyshev.T_one, hr]
+    simp [Chebyshev.T_one]
   | succ m ih =>
     rw [TT_recursion]
-    simp_all only [eval_sub, eval_mul, eval_ofNat, eval_pow, eval_one]
-    rw [abs]
-    simp_all only [neg_sub, sup_le_iff, tsub_le_iff_right]
-    simp_all only [le_add_iff_nonneg_right, Nat.ofNat_pos, mul_nonneg_iff_of_pos_left]
-    apply And.intro
-    · norm_num
-      simp_all only
-    · positivity
+    field_simp
+    rw [@abs_sub_le_iff]
+    field_simp
+    ring_nf
+    constructor
+    · -- Forward direction (→)
+      intro h
+      rcases h with ⟨h1, h2⟩
+      have h1_simplified : (eval r (TT m))^2 ≤ 1 := by linarith [h1]
+      rw [ih] at h1_simplified
+      exact (sq_le_one_iff_abs_le_one r).mp h1_simplified
+    · -- Backward direction (←)
+      intro h
+      have h' := (sq_le_one_iff_abs_le_one r).mpr h
+      rw [← ih] at h'
+      have h1 : (eval r (TT m))^2 * 2 ≤ 2 := by linarith [h']
+      have h2 : 0 ≤ (eval r (TT m))^2 := by apply pow_two_nonneg
+      exact ⟨h1, h2⟩
 
-lemma ψ_term_bound (m : ℕ) (r : ℝ) (hr : |r| ≤ 1) :
-    |ψ_term m r| ≤ 1 / (8^m) := by
-  unfold ψ_term
+lemma fixed_points (m : ℕ) (r : ℝ) : (TT (m + 1)).eval r = (TT m).eval r ↔
+  (TT m).eval r = -1/2 ∨ (TT m).eval r = 1 := by
+  rw [TT_recursion]
+  simp
+  constructor
+  · -- Forward direction (→): If r is a fixed point, then T_m(r) = -1/2 or T_m(r) = 1
+    intro h
+    ring_nf at h
+    have h' : (eval r (TT m) + 1/2) * (eval r (TT m) - 1) = 0 := by
+      linarith [show (eval r (TT m) + 1/2) = eval r (TT m) - (-1/2) by ring]
+    rw [mul_eq_zero] at h'
+    cases h' with
+      | inl h1 => left; linarith [h1]
+      | inr h2 => right; linarith [h2]
+  · -- Backward direction (←): If T_m(r) = -1/2 or T_m(r) = 1, then r is a fixed point
+    intro h
+    cases h with
+    | inl hl => rw [hl]; ring_nf
+    | inr hr => rw [hr]; ring_nf
+
+lemma geom_sum_neg_pow (b : ℝ) (h : 1 < b) (j k : ℕ) (hjk : j ≤ k + 1) :
+    ∑ m ∈ Ico j (k + 1), b^(-(m : ℤ)) = (b^(1 - (j : ℤ)) - b^(-(k : ℤ))) / (b - 1) := by
+  have hb : 1 / b ≠ 1 := by
+    field_simp
+    linarith
+  have h_summand : ∀ m ∈ Ico j (k + 1), b^(-(m : ℤ)) = (1 / b)^(m : ℕ) := by
+    intro m _
+    rw [div_eq_mul_inv, zpow_neg]
+    field_simp
+  rw [sum_congr rfl h_summand]
+  have hb_ne_zero : b ≠ 0 := by linarith
+  rw [geom_sum_Ico']
+  rw [one_div_pow, one_div_pow]
+  ring_nf
+  field_simp
+  rw [mul_assoc, neg_div, div_mul_eq_div_mul_one_div, div_self hb_ne_zero, one_mul]
+  rw [show -1 + b = b - 1 by ring]
+  rw [show -(1 / (b ^ k * (b - 1))) = -1 / (b ^ k * (b - 1)) by ring]
+  have hb_sub_one_ne_zero : b - 1 ≠ 0 := by linarith
+  have hb_pow_mul_sub_ne_zero : b ^ k * (b - 1) ≠ 0 := by
+    apply mul_ne_zero
+    · exact pow_ne_zero k hb_ne_zero
+    · exact hb_sub_one_ne_zero
+  rw [show -1 / (b ^ k * (b - 1)) + b / (b ^ j * (b - 1)) = b / (b ^ j * (b - 1)) - 1 / (b ^ k * (b - 1)) by ring]
+  simp +arith +decide
+  rw [zpow_one_sub_natCast₀ hb_ne_zero j]
+  field_simp
+  exact hb
+  exact hjk
+
+lemma shifted_SOS (k : ℕ) (r : ℝ) : ϕₖ k r =
+  (5 / 14 : ℝ) + (8^(-k : ℤ) / 7 : ℝ) + r / 2 + (1 / 8 : ℝ) *
+  (∑ m ∈ Finset.range k, 8^(-m : ℤ) * (TT m).eval r ^ 2) := by
+  -- Unfold the definitions of ϕₖ and ϕ_term
+  unfold ϕₖ ϕ_term
+  -- Pull out the m = 0 term from the sum
+  rw [Finset.sum_range_succ'] -- Pulls out the m = 0 term
+  rw [TT, pow_zero, pow_zero]
+  simp +arith +decide
+  -- Rewrite the sum using the recursion lemma
+  conv_lhs => {
+    rw [Finset.sum_congr rfl (fun k _ => by rw [TT_recursion k])]
+    simp +arith +decide
+  }
+  -- Split the sum into two parts
+  rw [Finset.sum_congr rfl (fun x _ => by
+    rw [show (2 * eval r (TT x) ^ 2 - 1) / 8 ^ (x + 1) =
+        (2 * eval r (TT x) ^ 2) / 8 ^ (x + 1) - 1 / 8 ^ (x + 1) by ring_nf]
+    )]
+  rw [sum_sub_distrib]
+  rw [mul_add]
+  rw [show (2⁻¹ * (∑ x ∈ range k, 2 * eval r (TT x) ^ 2 / 8 ^ (x + 1) - ∑ x ∈ range k, 1 / 8 ^ (x + 1)) + 2⁻¹ * r) =
+      2⁻¹ * (∑ x ∈ range k, 2 * eval r (TT x) ^ 2 / 8 ^ (x + 1) - ∑ x ∈ range k, 1 / 8 ^ (x + 1)) + 2⁻¹ * r by ring_nf]
+  rw [mul_sub]
+  rw [mul_sum]
+  -- Simplify the first sum
+  ring_nf
+
+  rw [show ∑ x ∈ range k, (1 / 2 : ℝ) * (2 * eval r (TT x) ^ 2 / 8 ^ (x + 1)) =
+      ∑ x ∈ range k, eval r (TT x) ^ 2 * (1 / 8) ^ (x + 1) by
+    apply Finset.sum_congr rfl
+    intro x hx
+    field_simp]
+
+  rw [Finset.sum_congr rfl (fun x _ => by
+    rw [pow_add, div_pow, one_pow, pow_one, ← mul_assoc, ← mul_comm]
+  )]
+  conv =>
+    pattern (∑ x ∈ range k, 1 / 8 ^ (x + 1))
+    rw [Finset.sum_congr rfl (fun x _ => by
+      rw [pow_add, div_mul_eq_div_div, pow_one, div_eq_mul_inv, mul_comm]
+    )]
+  ring_nf
+  rw [← mul_sum, ← mul_sum]
+  rw [show ∑ i ∈ range k, 1 / (8 ^ i : ℝ) = ∑ i ∈ range k, (1 / 8) ^ i by ring_nf]
+  rw [geom_sum_eq (show (1 / 8 : ℝ) ≠ 1 by norm_num), one_div]
+
+  -- Simplify the constants
+  ring_nf
+  field_simp
+  ring
+
+def 𝕋 : Set ℝ := Set.Icc (-1) 1
+
+lemma ϕ_term_bound (m : ℕ) (t : ℝ) (ht : t ∈ 𝕋) : |ϕ_term m t| ≤ 1 / (8^m) := by {
+  unfold ϕ_term
   rw [abs_div]
   field_simp
   ring_nf
-  have h_bound : |(TT m).eval r| ≤ 1 := by
-    apply abs_TT_le_one
-    exact hr
-  have h_pos : 0 < (8: ℝ)^m := by
-    apply pow_pos
-    norm_num
-  simpa
+  simp +arith +decide
+  · have h_bound : |(TT m).eval t| ≤ 1 := by
+      rw [← sq_le_one_iff_abs_le_one, TT_bounds]
+      rw [sq_le_one_iff_abs_le_one]
+      exact abs_le.mpr ht
+    linarith
+}
 
-lemma ψ_summable (r : ℝ) (hr : |r| ≤ 1) :
-    Summable (fun m => ψ_term m r) := by
+lemma TT_pwr_representation (r : ℝ) (hr : 1 < |r|) (m : ℕ) : eval r (TT m) =
+  ((r + sqrt (r^2 - 1))^(2^m) + (r - sqrt (r^2 - 1))^(2^m)) / 2 := by {
+  induction m with
+  | zero =>
+    unfold TT
+    simp [Chebyshev.T_one, pow_zero, pow_one]
+  | succ m ih =>
+    rw [TT_recursion m, eval_sub, eval_mul]
+    field_simp
+    rw [ih]
+    have h_sqrt : 0 ≤ -1 + r^2 := by {
+      field_simp [hr]
+      linarith
+    }
+    field_simp [h_sqrt]
+    rw [pow_succ, pow_succ]
+    ring_nf
+    -- Use the identity (r + sqrt(r^2 - 1)) * (r - sqrt(r^2 - 1)) = 1
+    have h_product : (r + sqrt (r^2 - 1)) * (r - sqrt (r^2 - 1)) = 1 := by
+      ring_nf
+      rw [sq_sqrt h_sqrt]
+      ring_nf
+    have h_product_pow :
+      (r + sqrt (r^2 - 1))^(2^m) * (r - sqrt (r^2 - 1))^(2^m) = 1 := by
+        rw [← mul_pow, h_product, one_pow]
+    have h_goal :
+      (r - sqrt (r^2 - 1))^(2^m) * (r + sqrt (r^2 - 1))^(2^m) = 1 := by
+        rw [mul_comm, h_product_pow]
+    field_simp [h_product_pow, h_sqrt]
+    ring_nf
+    rw [show (r - √(-1 + r^2))^(2^m) * (r + √(-1 + r^2))^(2^m) =
+          (r - √(r^2 - 1))^(2^m) * (r + √(r^2 - 1))^(2^m) by
+      rw [show -1 + r^2 = r^2 - 1 by ring]]
+    rw [h_goal]
+    ring_nf
+}
+
+lemma ψ_summable (t : ℝ) (ht : t ∈ 𝕋) :
+    Summable (fun m => ϕ_term m t) := by
   -- Step 1: Bound the terms of the series
-  have h_bound : ∀ m, |ψ_term m r| ≤ 1 / (8^m) := by
+  have h_bound : ∀ m, |ϕ_term m t| ≤ 1 / (8^m) := by
     intro m
-    exact ψ_term_bound m r hr
+    exact ϕ_term_bound m t ht
 
   -- Step 2: Show that the bounding series is summable
   have h_summable : Summable (fun m => 1 / (8^m : ℝ)) := by
@@ -128,8 +247,75 @@ lemma ψ_summable (r : ℝ) (hr : |r| ≤ 1) :
   -- Step 3: Apply the comparison test
   exact Summable.of_norm_bounded _ h_summable h_bound
 
--- From https://leanprover-community.github.io/theories/topology.html#filters
-example : Tendsto (fun x : ℝ ↦ 1 / x) atTop (𝓝 0) := by
-  simp
-  apply Tendsto.inv_tendsto_atTop
-  apply tendsto_id
+lemma TT_abs_gt_one (t : ℝ) (m : ℕ) (ht : 1 < |t|) : 1 < |(TT m).eval t| := by
+  by_contra! h
+
+  rw [←TT_bounds] at h
+  apply not_lt_of_le (show |t| ≤ 1 by {
+      rw [←Real.abs_le_one_iff_sq_le_one]
+      assumption
+    })
+  exact ht
+
+lemma ψ_summable_iff_long (t : ℝ) :
+    Summable (fun m => ϕ_term m t) ↔ t ∈ 𝕋 := by
+  constructor
+  · intro h_summable  -- (→) Summable → t ∈ 𝕋
+    rw [𝕋, Set.mem_Icc]
+    by_contra! h_contra  -- Assume t ∉ 𝕋, show ¬Summable
+    simp only [not_and_or, not_le] at h_contra
+    cases h_contra with
+    | inl h_left => -- t < -1
+        have h_abs : 1 < |t| := by rwa [abs_of_neg h_left]
+        have h_diverges : ¬Tendsto (fun m => |ϕ_term m t|) atTop (𝓝 0) := by
+          intro h_tendsto_zero  -- Assume terms tend to 0, derive contradiction.
+          unfold ϕ_term at h_tendsto_zero
+          simp at h_tendsto_zero
+
+          -- Key Idea: Since |(TT m).eval t| > 1, and we're dividing by 8^m,
+          -- we need to show that |(TT m).eval t| / 8^m *diverges*.
+          have : ∀ m, 1 < |(TT m).eval t| := fun m => TT_abs_gt_one t m h_abs
+
+          have h_diverges_lower_bound: ¬Tendsto (fun m => (1:ℝ) / (8^m)) atTop (𝓝 0) := by
+            intro h --Assume 1/8^m converges to zero.
+            exact one_ne_zero (eq_zero_of_tendsto_of_tendsto_of_tendsto_add h (summable_geometric_of_lt_one (by norm_num) (by norm_num)).tendsto_atTop (summable_geometric_of_lt_one (by norm_num) (by norm_num)).tendsto_atTop)
+
+          apply h_diverges_lower_bound
+          apply Tendsto.mono_of_le_of_tendsto h_tendsto_zero
+          intro m
+          rw [ϕ_term, abs_div, abs_of_pos (pow_pos (by norm_num) _)]
+          --Since |TT m t| > 1, then |TT m t| / 8^m > 1 / 8^m
+          have h: 1 / 8 ^ m ≤ |(eval t (TT m)) / 8 ^ m| := by
+            apply div_le_div_of_le_of_pos
+            norm_num
+            linarith [(this m)]  -- Use the fact that |TT m t| > 1
+          linarith
+
+        apply h_diverges -- Series terms don't go to zero, so series diverges.
+        apply tendsto_norm_atTop_zero_of_summable h_summable
+
+    | inr h_right => -- t > 1  (Analogous to the t < -1 case)
+      have h_abs : 1 < |t| := by linarith -- |t| = t
+      have h_diverges : ¬Tendsto (fun m => |ϕ_term m t|) atTop (𝓝 0) := by
+          intro h_tendsto_zero
+          unfold ϕ_term at h_tendsto_zero
+          simp at h_tendsto_zero
+          have : ∀ m, 1 < |(TT m).eval t| := fun m => TT_abs_gt_one t m h_abs
+          have h_diverges_lower_bound: ¬Tendsto (fun m => (1:ℝ) / (8^m)) atTop (𝓝 0) := by
+            intro h
+            exact one_ne_zero (eq_zero_of_tendsto_of_tendsto_of_tendsto_add h (summable_geometric_of_lt_one (by norm_num) (by norm_num)).tendsto_atTop (summable_geometric_of_lt_one (by norm_num) (by norm_num)).tendsto_atTop)
+          apply h_diverges_lower_bound
+          apply Tendsto.mono_of_le_of_tendsto h_tendsto_zero
+          intro m
+          rw [ϕ_term, abs_div, abs_of_pos (pow_pos (by norm_num) _)]
+          have h: 1 / 8 ^ m ≤ |(eval t (TT m)) / 8 ^ m| := by
+            apply div_le_div_of_le_of_pos
+            norm_num
+            linarith [(this m)]
+          linarith
+
+      apply h_diverges
+      apply tendsto_norm_atTop_zero_of_summable h_summable
+
+  · intro h_t  -- (←)  t ∈ 𝕋 → Summable
+    exact ψ_summable t h_t
