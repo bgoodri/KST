@@ -7,14 +7,13 @@ import Mathlib.Analysis.Calculus.Deriv.Basic
 import Mathlib.Analysis.Calculus.Deriv.Add
 import Mathlib.Analysis.Calculus.ContDiff.Defs
 import Mathlib.Data.Finset.Range
-import Mathlib.Topology.Instances.Real.Defs
 import Mathlib.Data.ENNReal.Basic
 import Mathlib.Topology.Defs.Filter
 import Mathlib.Topology.Basic
 import Mathlib.Order.Filter.Defs
 import Mathlib.Topology.Algebra.InfiniteSum.Defs
 import Mathlib.Algebra.BigOperators.Group.Finset.Defs
-import LeanCopilot
+-- import LeanCopilot
 
 open Real Polynomial Filter Topology BigOperators Finset
 
@@ -246,76 +245,3 @@ lemma ψ_summable (t : ℝ) (ht : t ∈ 𝕋) :
 
   -- Step 3: Apply the comparison test
   exact Summable.of_norm_bounded _ h_summable h_bound
-
-lemma TT_abs_gt_one (t : ℝ) (m : ℕ) (ht : 1 < |t|) : 1 < |(TT m).eval t| := by
-  by_contra! h
-
-  rw [←TT_bounds] at h
-  apply not_lt_of_le (show |t| ≤ 1 by {
-      rw [←Real.abs_le_one_iff_sq_le_one]
-      assumption
-    })
-  exact ht
-
-lemma ψ_summable_iff_long (t : ℝ) :
-    Summable (fun m => ϕ_term m t) ↔ t ∈ 𝕋 := by
-  constructor
-  · intro h_summable  -- (→) Summable → t ∈ 𝕋
-    rw [𝕋, Set.mem_Icc]
-    by_contra! h_contra  -- Assume t ∉ 𝕋, show ¬Summable
-    simp only [not_and_or, not_le] at h_contra
-    cases h_contra with
-    | inl h_left => -- t < -1
-        have h_abs : 1 < |t| := by rwa [abs_of_neg h_left]
-        have h_diverges : ¬Tendsto (fun m => |ϕ_term m t|) atTop (𝓝 0) := by
-          intro h_tendsto_zero  -- Assume terms tend to 0, derive contradiction.
-          unfold ϕ_term at h_tendsto_zero
-          simp at h_tendsto_zero
-
-          -- Key Idea: Since |(TT m).eval t| > 1, and we're dividing by 8^m,
-          -- we need to show that |(TT m).eval t| / 8^m *diverges*.
-          have : ∀ m, 1 < |(TT m).eval t| := fun m => TT_abs_gt_one t m h_abs
-
-          have h_diverges_lower_bound: ¬Tendsto (fun m => (1:ℝ) / (8^m)) atTop (𝓝 0) := by
-            intro h --Assume 1/8^m converges to zero.
-            exact one_ne_zero (eq_zero_of_tendsto_of_tendsto_of_tendsto_add h (summable_geometric_of_lt_one (by norm_num) (by norm_num)).tendsto_atTop (summable_geometric_of_lt_one (by norm_num) (by norm_num)).tendsto_atTop)
-
-          apply h_diverges_lower_bound
-          apply Tendsto.mono_of_le_of_tendsto h_tendsto_zero
-          intro m
-          rw [ϕ_term, abs_div, abs_of_pos (pow_pos (by norm_num) _)]
-          --Since |TT m t| > 1, then |TT m t| / 8^m > 1 / 8^m
-          have h: 1 / 8 ^ m ≤ |(eval t (TT m)) / 8 ^ m| := by
-            apply div_le_div_of_le_of_pos
-            norm_num
-            linarith [(this m)]  -- Use the fact that |TT m t| > 1
-          linarith
-
-        apply h_diverges -- Series terms don't go to zero, so series diverges.
-        apply tendsto_norm_atTop_zero_of_summable h_summable
-
-    | inr h_right => -- t > 1  (Analogous to the t < -1 case)
-      have h_abs : 1 < |t| := by linarith -- |t| = t
-      have h_diverges : ¬Tendsto (fun m => |ϕ_term m t|) atTop (𝓝 0) := by
-          intro h_tendsto_zero
-          unfold ϕ_term at h_tendsto_zero
-          simp at h_tendsto_zero
-          have : ∀ m, 1 < |(TT m).eval t| := fun m => TT_abs_gt_one t m h_abs
-          have h_diverges_lower_bound: ¬Tendsto (fun m => (1:ℝ) / (8^m)) atTop (𝓝 0) := by
-            intro h
-            exact one_ne_zero (eq_zero_of_tendsto_of_tendsto_of_tendsto_add h (summable_geometric_of_lt_one (by norm_num) (by norm_num)).tendsto_atTop (summable_geometric_of_lt_one (by norm_num) (by norm_num)).tendsto_atTop)
-          apply h_diverges_lower_bound
-          apply Tendsto.mono_of_le_of_tendsto h_tendsto_zero
-          intro m
-          rw [ϕ_term, abs_div, abs_of_pos (pow_pos (by norm_num) _)]
-          have h: 1 / 8 ^ m ≤ |(eval t (TT m)) / 8 ^ m| := by
-            apply div_le_div_of_le_of_pos
-            norm_num
-            linarith [(this m)]
-          linarith
-
-      apply h_diverges
-      apply tendsto_norm_atTop_zero_of_summable h_summable
-
-  · intro h_t  -- (←)  t ∈ 𝕋 → Summable
-    exact ψ_summable t h_t
