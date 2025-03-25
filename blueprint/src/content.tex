@@ -122,12 +122,12 @@ Our Chebyshev polynomials also follow a \emph{two-term} recursion that drives ne
   \uses{def:T}
   \lean{TT_recursion}
   \leanok
-  $\TT{m + 1} = 2\TT{m}^2 - 1$, where $m \in \mathbb{N}$.
+  $T_{m + 1} = 2T_{m}^2 - 1$, where $m \in \mathbb{N}$.
 \end{lemma}
   
 \begin{proof}
   \leanok
-  Since $2^{m + 1} = 2 \times 2^m$, we can write $\TT{m + 1} = T_{2 \times 2^m}$. It is already proven by induction in Mathlib (TODO: add succinct explanation) that a Chebyshev polynomial whose index is a product of integers can be written as a composition of two Chebyshev polynomials, so $T_{2 \times 2^m} = T_2 \circ \TT{m}$. It follows from Definition \ref{def:T} that $T_2\left(r\right) = 2r^2 - 1$, so $T_2 \circ \TT{m} = 2\TT{m}^2 - 1 = \TT{m + 1}$.
+  Since $2^{m + 1} = 2 \times 2^m$, we can write $T_{m + 1} = T_{2 \times 2^m}$. It is already proven by induction in Mathlib (TODO: add succinct explanation) that a Chebyshev polynomial whose index is a product of integers can be written as a composition of two Chebyshev polynomials, so $T_{2 \times 2^m} = T_2 \circ T_{m}$. It follows from Definition \ref{def:T} that $T_2\left(r\right) = 2r^2 - 1$, so $T_2 \circ T_{m} = 2T_{m}^2 - 1 = T_{m + 1}$.
 \end{proof}
 
 \begin{lemma}[Bounds]
@@ -162,62 +162,60 @@ Both fixed points are repellent because the derivative of the mapping at a fixed
   \leanok
   $\sum\limits_{m = j}^k b^{-m} = \sum\limits_{m = j}^k \left(\frac{1}{b}\right)^m \equiv S$, which is in the usual form of a geometric series with a ratio of $\frac{1}{b}$ whose partial sums are already proven in Mathlib. The usual method of proof is to note that since $S - \frac{1}{b} S = \sum\limits_{m = j}^k \left[\left(\frac{1}{b}\right)^m - \left(\frac{1}{b}\right)^{m + 1}\right] = \left(\frac{1}{b}\right)^j - \left(\frac{1}{b}\right)^{k + 1}$, then $S = \frac{\left(\frac{1}{b}\right)^j - \left(\frac{1}{b}\right)^{k + 1}}{1 - \frac{1}{b}} = \frac{b^{-j} - b^{-k - 1}}{\frac{b - 1}{b}} = \frac{b^{1 - j} - b^{-k}}{b - 1}$.
 \end{proof}
+
+\begin{lemma}[Symmetry]
+  \label{lem:symmetry}
+  $\TT[-r]{m} = \left(-1\right)^{2^m} \TT[r]{m}$.
+\end{lemma}
+\begin{proof}
+  This also holds for Chebyshev polynomials whose index is not a power of two, but the general case is not yet proven in Mathlib, so we will prove it for $j = 2^m$. If $m = 0$, then $\TT[r]{0} = r$ so the claimed equation holds. Per the two-term recursion in Lemma \ref{lem:TT_recursion}, we need to show that $2\TT[-r]{m}^2 - 1 = \TT[-r]{m + 1} = \TT[r]{m + 1} = 2\TT[r]{m}^2 - 1$ because $\left(-1\right)^{2^m} = 1$ when $m > 0$.  Substituting for $\TT[-r]{m}$ with the inductive hypothesis implies $2\left[\left(-1\right)^{2^m} \TT[r]{m}\right]^2 - 1 =  2\TT[r]{m} - 1$.
+\end{proof}
+
+\begin{lemma}[Functional equation]
+  \label{lem:functional_equation}
+  $\varphi_k\left(-r\right) = \varphi_k\left(r\right) - r$.
+\end{lemma}
+\begin{proof}
+  Per Lemma \ref{lem:symmetry}, the only term that differs in Definition \ref{def:core} between the $r$ and $-r$ cases is when $m = 0$ and $\frac{1}{2} 8^{0} \TT[\mp r]{0} = \frac{\mp r}{2}$. Thus, $\varphi_k\left(r\right) - \varphi_k\left(-r\right) = \frac{r}{2} - \frac{-r}{2} = r$.
+\end{proof}
 \begin{lemma}[Linearly shifted sum-of-squares]
   \label{lem:SOS}
   $\varphi_k\left(r\right) = \frac{5}{14} + \frac{8^{-k}}{7} + \frac{r}{2} + \frac{1}{8} \sum\limits_{m = 0}^{k - 1} 8^{-m} \TT[r]{m}^2$. 
 \end{lemma}
 \begin{proof}
-  Pull the $\TT[r]{0} = r$ term out of the series in Definition \ref{def:approx} and then shift the index of the summation while applying Lemma \ref{lem:TT_recursion} to all the remaining terms to obtain $\varphi_k\left(r\right) = \threesevenths + \offset + \frac{r}{2} + \frac{1}{2} \sum\limits_{m = 0}^{k - 1} 8^{-\left(m + 1\right)} \left(2 \TT[r]{m}^2 - 1\right) = \threesevenths + \offset + \frac{r}{2} + \frac{1}{8} \sum\limits_{m = 0}^{k - 1} 8^{-m} \TT[r]{m}^2 - \frac{1}{16} \sum\limits_{m = 0}^{k - 1} 8^{-m}$. Apply Lemma \ref{lem:geom_sum_neg_pow} with $b = 8$ to the last term and simplify the constant to obtain the result.
+Pull the $\TT[r]{0} = r$ term out of the series in Definition \ref{def:approx} and then shift the index of the summation while applying the two-term recursion from Lemma \ref{lem:TT_recursion} to all the remaining terms to obtain $\varphi_k\left(r\right) = \threesevenths + \offset + \frac{r}{2} + \frac{1}{2} \sum\limits_{m = 0}^{k - 1} 8^{-\left(m + 1\right)} \left(2 \TT[r]{m}^2 - 1\right)$. We can pull a factor of $\frac{1}{8}$ out of the sum and then separate it to obtain $\varphi_k\left(r\right) = \threesevenths + \offset + \frac{r}{2} + \frac{1}{8} \sum\limits_{m = 0}^{k - 1} 8^{-m} \TT[r]{m}^2 - \frac{1}{16} \sum\limits_{m = 0}^{k - 1} 8^{-m}$. Apply Lemma \ref{lem:geom_sum_neg_pow} with $b = 8$ to the last term and simplify the constant to obtain the claimed result.
 \end{proof}
 
 \renewcommand{\thetheorem}{\thesection.\arabic{theorem}}
 
 \section{Convergence}\label{sec:Convergence}
 
-Let $\mathbb{T} = \left[-1,1\right]$. The infinite sum in the definition of $\varphi$ converges uniformly to \emph{some} function on $\mathbb{T}$, although it is \underline{not yet known} whether it can be written in terms of special functions. 
-
-\begin{lemma}[]
-  \label{lem:summable}
-  \uses{def:core}
-  \lean{ψ_summable}
-  \leanok
-  $\sum\limits_{m = 0}^\infty 8^{-m} \TT[t]{m}$ is summable if and only if $t \in \mathbb{T}$.
+\begin{lemma}
+  \label{lem:convergence_characterization}
+  Let $\mathbb{T} = \left[-1,1\right]$. If $t \in \mathbb{T}$, then the sequence of partial sums, $\{\varphi_k\left(t\right)\}$ forms a uniformly Cauchy sequence, but if $r \notin \mathbb{T}$, then the infinite sum in $\varphi\left(r\right)$ diverges.
 \end{lemma}
-  
 \begin{proof}
   \uses{lem:TT_recursion, lem:geom_sum_neg_pow}
   \leanok
-  To prove the if direction, we utilize the Weierstrass M-test. Lemma \ref{lem:bounds} implies $\TT[t]{m} \in \mathbb{T}$. Since $\left|8^{-m} \TT[t]{m}\right| \leq 8^{-m}$ and $\sum\limits_{m = 0}^\infty 8^{-m} = \frac{8}{7}$ by Lemma \ref{lem:geom_sum_neg_pow} with $b = 8$, $\varphi$ is well-defined on $\mathbb{T}$.
+  To prove the if direction, we utilize the Weierstrass M-test, which is sufficient to prove that the sequence of partial sums forms a uniformly Cauchy sequence. Lemma \ref{lem:bounds} implies $\TT[t]{m} \in \mathbb{T}$. Since $\left|8^{-m} \TT[t]{m}\right| \leq 8^{-m}$ and $\frac{1}{2}\sum\limits_{m = 0}^\infty 8^{-m} = \frac{4}{7}$ by Lemma \ref{lem:geom_sum_neg_pow} with $b = 8$, $\varphi$ is well-defined on $\mathbb{T}$.
 
-  To prove the only if direction, we utilize the direct comparison test. It suffices to show that if $\left|t\right| > 1$, then the limit of $8^{-m} \frac{\TT[t]{m}}{8^{m}}$ as $m \uparrow \infty$ is not zero. When $\left|r\right| > 1$, it is well-known that $T_j\left(r\right) = \frac{\left(r + \sqrt{r^2 - 1}\right)^j + \left(r - \sqrt{r^2 - 1}\right)^j}{2}$, although it is not yet proven in Mathlib. We only need to prove it when $j = 2^m$, in which case if $m = 0$, then $\frac{\left(t + \sqrt{t^2 - 1}\right)^1 + \left(t - \sqrt{t^2 - 1}\right)^1}{2} = t = \TT[t]{0}$. Assuming this relationship holds for $m$ and using Lemma \ref{lem:TT_recursion} with the inductive hypothesis, we need to show that 
-  \begin{eqnarray*}
-  \TT[t]{m + 1} &=& 
-  2 \left(\frac{\left(t + \sqrt{t^2 - 1}\right)^{2^m} + \left(t - \sqrt{t^2 - 1}\right)^{2^m}}{2}\right)^2 - 1 \\ &=&
-  \frac{\left(t + \sqrt{t^2 - 1}\right)^{2^{m + 1}} + \left(t - \sqrt{t^2 - 1}\right)^{2^{m + 1}}}{2} +
-  \left[\left(t + \sqrt{t^2 - 1}\right) \left(t - \sqrt{t^2 - 1}\right)\right]^{2^m} - 1 \\ &=&
-  \frac{\left(t + \sqrt{t^2 - 1}\right)^{2^{m + 1}} + \left(t - \sqrt{t^2 - 1}\right)^{2^{m + 1}}}{2},
-  \end{eqnarray*}
-  where the last line follows from the fact that $\left(t + \sqrt{t^2 - 1}\right) \left(t - \sqrt{t^2 - 1}\right) = t^2 + 0 - t^2 + 1 = 1$. Thus, if $\left|t\right| > 1$, then $\TT[t]{m + 1} > t^{2^{m + 1}}$, which diverges at a doubly exponential rate as $m \uparrow \infty$. Since $8^{-m}$ converges to zero at a geometric rate, 
-  $8^{-m} \frac{\TT[t]{m}}{8^{m}}$ diverges as $m \uparrow \infty$.
+  To prove the only if direction, we utilize the last term test. It suffices to show that if $\left|r\right| > 1$, then the limit of $8^{-m} \TT[r]{m}$ as $m \uparrow \infty$ is not zero. When $r > 1$, it is already proven in Mathlib (TODO: add succinct explanation) that $T_j\left(r\right) = \cosh\left(j \theta\right)$ where $\theta$ is implicitly defined by $\cosh \theta = r$. Mathlib unfortunately lacks the $\cosh^{-1}$ function but has $\sinh^{-1}$, so we can explicitly define $\theta \equiv \sinh^{-1}\left(r^2 - 1\right) > 0$. Mathlib does prove that $\cosh\left(\sinh^{-1}\left(r^2 - 1\right)\right) = \sqrt{1 + r^2 - 1} = r > 1$. Moreover, $\cosh\left(2^m \theta\right) = \frac{e^{2^m \theta} - e^{-2^m \theta}}{2}$, so $\ln \frac{\TT[r]{m}}{2^{3m}} = 2^m \theta + \ln\left(1 + e^{-2^{m + 1} \theta}\right) - \left(3m + 1\right) \ln 2$. As $m \uparrow \infty$, a Maclaurin-series expansion of $\ln\left(1 + e^{-2^{m + 1} \theta}\right)$ reveals it approaches the negligibly small value of $e^{-2^{m + 1} \theta}$, and since $2^m \theta > 0$, it approaches $\infty$ as $m \uparrow \infty$ at a much faster rate than $-\left(3m + 1\right) \ln 2$ approaches $-\infty$. Thus, there is no limit of $8^{-m} \TT[r]{m}$ as $m \uparrow \infty$ when $r > 1$. When $r < -1$, Lemma \ref{lem:symmetry} shows that the only term in the infinite sum that changes is when $m = 0$ and $\TT[\mp r]{0} = \mp r$. Thus, the infinite sum also diverges when $r < -1$.
 \end{proof}
 
-Although the theoretical analysis in Lean pertains to $\varphi$, in numerical work we can only approximate $\varphi\left(t\right)$ with $\varphi_k\left(t\right)$ using floating-point numbers, so the approximation must converge rapidly.
-\begin{lemma}[]
-  \label{lem:limit}
-  \uses{def:approx}
-  As $k \uparrow \infty$, $\varphi_k$ converges uniformly to $\varphi$ on $\mathbb{T}$.
+\begin{remark*}
+Since the error in approximating $\varphi\left(t\right)$ with $\varphi_k\left(t\right)$ is less than $\frac{2^{-3k}}{14}$, the approximation error if $k = 17$ is less than $\frac{2^{-52}}{7}$, where $2^{-52}$ is the smallest double-precision number that can be added to $1$ without underflow. Thus, only $18$ iterations of an unrolled loop with only a few floating-point operations per iteration are needed to recursively evaluate $\varphi_{17}\left(t\right)$ from Lemma \ref{lem:SOS}.
+\end{remark*}
+\begin{remark*}
+  If $t = \frac{a}{b}$ where $a \in \mathbb{Z}$ and $b \in \mathbb{N}$ such that $\left|a\right| < b$ and $a$ has no common factor with $b$, then $\varphi_k\left(\frac{a}{b}\right)$ is also rational because the only operations in Definition \ref{def:core} are arithmetic. However, $\varphi\left(\frac{a}{b}\right)$ is generally irrational. The only five known rational values of $\varphi$ occur when one of the fixed points from Lemma \ref{lem:fixed_points} is quickly reached: $\varphi\left(1\right) = 1$ (implicit in Lemma \ref{lem:convergence_characterization}), $\varphi\left(-1\right) = \varphi\left(1\right) - 1 = 0$ (from Lemma \ref{lem:functional_equation}), $\varphi\left(-\frac{1}{2}\right) = \frac{3}{7} + \frac{1}{2} \sum\limits_{m = 0}^\infty 8^{-m} \left(-\frac{1}{2}\right) = \frac{1}{7}$ (from Lemmas \ref{lem:fixed_points} and \ref{lem:geom_sum_neg_pow}), $\varphi\left(\frac{1}{2}\right) = \varphi\left(-\frac{1}{2}\right) + \frac{1}{2} = \frac{9}{14}$ (from Lemma \ref{lem:functional_equation}), and $\varphi\left(0\right) = \frac{3}{7} + \frac{0}{2} - \frac{1}{8} + \frac{1}{2} \sum\limits_{m = 0}^\infty 8^{-m} = \frac{3}{8}$ (from Lemmas \ref{lem:fixed_points} and \ref{lem:geom_sum_neg_pow}). These five point coincide with the only five values where cosine and sine are rational according to Niven's theorem. Although the partial sums converge uniformly with an error bound proportional $\frac{1}{8^{k}}$, they do so with denominators that are too large for $\varphi\left(\frac{a}{b}\right)$ to be a Liouville number, so they may well be algebraic rather than transcendental. In addition, if $\TT[\frac{a}{b}]{m}$ is never either of the fixed points from Lemma \ref{lem:fixed_points}, then the numerators of the partial sums do not have a limit.
+\end{remark*}
+
+\begin{lemma}
+  \label{lem:endpoint_singularities}
+  $\varphi$ is not differentiable at $-1$ and $1$, which are essential logarithmic singularities.
 \end{lemma}
 \begin{proof}
-  \uses{lem:TT_recursion}
-  Similarly to Lemma \ref{lem:summable}, $\left|\halfsum{0}{\infty}{t} - \halfsum{0}{k}{t}\right| \leq \frac{1}{2} \sum\limits_{m = k + 1}^\infty \left|8^{-m}\TT[t]{m}\right| \leq \frac{1}{2} \sum\limits_{m = k + 1}^\infty 8^{-m} = \offset$ by Lemma \ref{lem:geom_sum_neg_pow}. As $k \uparrow \infty$, this bound approaches $0$, so $\lim\limits_{k \uparrow \infty}\varphi_k \rightarrow \varphi$ over $\mathbb{T}$.
+  The derivative is defined as $\dot{\varphi}\left(t\right) \equiv \lim\limits_{h \rightarrow 0} \frac{\varphi\left(t + h\right) - \varphi\left(t\right)}{h}$. Per Lemma \ref{lem:convergence_characterization}, if $t + h \notin \mathbb{T}$, then this limit is undefined, which can occur if both $t = 1$ and $h > 0$ or if both $t = -1$ and $h < 0$. In other words, $\varphi$ is merely right differentiable at $t = 1$ and left differentiable at $t = -1$.
 \end{proof}
-\begin{remark*}
-Since the error in approximating $\varphi\left(t\right)$ with $\varphi_k\left(t\right)$ is less than $\frac{2^{-3k}}{14}$, the approximation error if $k = 17$ is less than $\frac{2^{-52}}{7}$, where $2^{-52}$ is the smallest double-precision number that can be added to $1$ without underflow. Thus, only $18$ iterations of an unrolled loop with only a few floating-point operations per iteration are needed to evaluate $\varphi_{17}\left(t\right)$ from Lemma \ref{lem:SOS}.
-\end{remark*}
-\begin{remark*}
-  If $t = \frac{a}{b}$ where $a \in \mathbb{Z}$ and $b \in \mathbb{N}$ such that $\left|a\right| < b$ and $a$ has no common factor with $b$, then $\varphi_k\left(\frac{a}{b}\right)$ is also rational because the only operations in Definition \ref{def:core} are arithmetic. However, $\varphi\left(\frac{a}{b}\right)$ is generally irrational but may well be algebraic rather than transcendental. Although the partial sums converge uniformly with an error bound proportional $\frac{1}{8^{-k}}$, they do so with denominators that are too large for $\varphi\left(\frac{a}{b}\right)$ to be a Liouville number. In addition, if $\TT[\frac{a}{b}]{m}$ is never either of the fixed points from Lemma \ref{lem:fixed_points}, then the numerators of the partial sums do not have a limit.
-\end{remark*}
-
 
 \begin{proposition}[]
   \label{prop:q=0}
@@ -227,32 +225,17 @@ Since the error in approximating $\varphi\left(t\right)$ with $\varphi_k\left(t\
   
 \begin{proof}
   \uses{lem:TT_recursion}
-  The derivative is defined as $\dot{\psi}_{p,q}\left(x\right) \equiv \lim\limits_{h \rightarrow 0} \frac{\psi_{p,q}\left(x + h\right) - \psi_{p,q}\left(x\right)}{h}$ where $\psi_{p,q}\left(x\right) \equiv \lambda_p \varphi\left(x - \frac{q}{2n}\right)$ from Definition \ref{def:inner_function}. Per Lemma \ref{lem:summable}, if $x + h - \frac{q}{2n} \notin \mathbb{T}$, then the two-sided limit in the definition of $\dot{\psi}_{p,q}\left(x\right)$ does not exist at that point. If $h > 0$, that exceptional case can occur if and only if both $x = 1$ and $q = 0$, and if $h < 0$, it can also occur if and only if both $x = 0$ and $q = 2n$.
+  Recall from Definition \ref{def:inner_function} that $\psi_{p,q}\left(x\right) \equiv \lambda_p \varphi\left(x - \frac{q}{2n}\right)$. Per Lemma \ref{lem:endpoint_singularities}, if $x + h - \frac{q}{2n} \notin \mathbb{T}$, then $\dot{\varphi}$ does not exist at that point and hence neither does $\dot{\psi}_{p,q}$ exist at that point. If $h > 0$, that exceptional case can occur if and only if both $x = 1$ and $q = 0$, and if $h < 0$, it can also occur if and only if both $x = 0$ and $q = 2n$.
 \end{proof}
 \begin{remark*}
-Hence, our candidate for a core function narrowly avoids the fact proven by Vituskin and Khenkin that the KST would not hold if \emph{all} the inner functions were continuously differentiable.     
+Thus, our candidate for a core function narrowly avoids the fact proven by Vituskin and Khenkin that the KST would not hold if \emph{all} the inner functions were continuously differentiable.     
 \end{remark*}
-
-\section{Requisite Properties}\label{sec:RequisiteProperties}
-
-\begin{figure}
-    \begin{center}
-    \caption{The (well-approximated) core function and its derivative}
-    \label{fig:core}
-    \includegraphics[width=0.95\linewidth]{../images/core.png}
-    \end{center}
-    \emph{The blue line is for $\varphi_{17}$, which approximates $\varphi$ to double-precision. The green line is for the exact derivative of $\varphi_{17}$, which approximates the derivative of $\varphi$ on $\left(-1,1\right)$ in which case the latter exists, as is proven later in Lemma \ref{lem:weak_derivative}. The black dotted line is for $\varphi_0$. The red points are discussed in Chapter \ref{ch:Injectivity} and are $\varphi\left(\tau\right)$ at Chebyshev-Lobatto nodes when $\tau = -\cos\frac{j\pi}{16}$ and $j$ is an integer between $0$ and $16$ inclusive. The two orange points are $\varphi\left(-\frac{1}{2}\right) = \frac{1}{7}$ and $\varphi\left(\frac{1}{2}\right) = \frac{9}{14}$, which along with the nodal values $\varphi\left(-1\right) = 0$, $\varphi\left(0\right) = \frac{3}{8}$, and $\varphi\left(1\right) = 1$ are the only five known rational values of $\varphi$.}
-\end{figure}
-
-Both $\varphi_{17}$ (in blue) and its derivative (in green) are shown in Figure \ref{fig:core}. $\varphi_{17}$ is clearly an increasing function from $\mathbb{T}$ to $\mathbb{I}$, as is its derivative. It appears that a small perturbation to $\psi$ would violate one or more of our three requirements for a core function in the KSR: increasing over $\mathbb{T}$, not continuously differentiable over $\mathbb{T}$, and having a bounded derivative wherever it exists on $\mathbb{T}$. There may well be other ways to define a core function that has these three properties, but no one really has. Moreover, it seems difficult to construct one that converges more rapidly than $\varphi_k$ does. 
-
-This section merely proves what is already apparent from Figure \ref{fig:core}. Since $\varphi_k$ converges uniformly to $\psi$ over $\mathbb{T}$ per Lemma \ref{lem:limit}, $\psi$ inherits most of the properties of $\varphi_k$ as $k \uparrow \infty$.
 \begin{lemma}
   \label{lem:continuity}
-  $\varphi$ is a continuous function over $\mathbb{T}$.
+  $\varphi \in C\left(\mathbb{T}\right)$.
 \end{lemma}
 \begin{proof}
-  $\varphi_k$ in Definition \ref{def:approx} is a polynomial and hence is continuous. The uniform limit of a sequence of continuous functions is a continuous function, so $\varphi$ is continuous wherever it is well-defined.
+  $\varphi_k$ in Definition \ref{def:approx} is a sum of polynomials and thus is continuous. Per Lemma \ref{lem:convergence_characterization}, $\{\varphi_k\}$ converges uniformly to $\varphi$ on $\mathbb{T}$. The uniform limit of a sequence of continuous functions is continuous, so $\varphi$ is continuous over $\mathbb{T}$ but no smoother in light of Lemma \ref{lem:endpoint_singularities}.
 \end{proof}
 
 \begin{lemma}
@@ -260,21 +243,23 @@ This section merely proves what is already apparent from Figure \ref{fig:core}. 
   If $q = 0$ or $q = 2n$, then $\psi_{p,q} \in C\left(\mathbb{I}\right)$.
 \end{lemma}
 \begin{proof}
-  Per Definition \ref{def:approx}, $\psi_{p,q} \propto \varphi$, so Lemma \ref{lem:continuity} implies $\psi_{p,q}$ is a continuous function on $\mathbb{I}$ for any $p$ and $q$. Proposition \ref{prop:q=0} implies that if $q = 0$ or $q = 2n$, $\psi_{p,q}$ is no smoother than continuous, although this categorization lacks nuance because there is only one point where the function is not differentiable and is quite smooth elsewhere in $\mathbb{I}$.
+  Recall from Definition \ref{def:inner_function} that $\psi_{p,q}\left(x\right) \equiv \lambda_p \varphi\left(x - \frac{q}{2n}\right)$, so Lemma \ref{lem:continuity} in fact implies $\psi_{p,q} \in C\left(\mathbb{I}\right)$ for any $p$ and $q$, but we will strengthen this for $0 < q < 2n$ below in Proposition \ref{prop:C2}.
 \end{proof}
 
-\begin{lemma}
-  \label{lem:convexity}
-  \uses{def:core}
-  $\varphi$ is a convex function over $\mathbb{T}$.
-\end{lemma}
-  
-\begin{proof}
-  \uses{lem:TT_recursion}
-  Lemma \ref{lem:SOS} implies $\varphi_k$ is a weighted sum of squares plus a line, which are both convex functions, as is their sum. The uniform limit of a sequence of convex functions is a convex function, so $\varphi$ is a convex function wherever it is well-defined.
-\end{proof}
+However, these last few results lack nuance because the derivative is undefined only at one or both endpoints of a domain, and the functions are quite smooth on the interior, as is shown in Figure \ref{fig:core}. Both $\varphi_{17}$ (in blue) and its derivative (in green) are are clearly increasing functions from $\mathbb{T}$ to $\mathbb{I}$. It appears that a small perturbation to $\varphi$ would violate one or more of our three requirements for a core function in the KSR (that are proven in Section \ref{sec:RequisiteProperties}): increasing over $\mathbb{T}$, not continuously differentiable over $\mathbb{T}$, and having a bounded derivative wherever it exists on $\mathbb{T}$. There may well be other ways to define a core function that has these three properties, but no one really has. Moreover, it seems difficult to construct one that converges more rapidly than $\varphi_k$ does. 
+\begin{figure}
+    \begin{center}
+    \caption{The (well-approximated) core function and its derivative}
+    \label{fig:core}
+    \includegraphics[width=0.95\linewidth]{../images/core.png}
+    \end{center}
+    \emph{The blue line is for $\varphi_{17}$, which approximates $\varphi$ to double-precision. $\varphi_{17}$ is a polynomial of degree $2^{17} = 131,072$ whose exponents are all even numbers except for the linear term, which oscillates around a line almost $200$ times per pixel with amplitudes of about a quadrillionth. The green line is for the exact derivative of $\varphi_{17}$, which approximates the derivative of $\varphi$ on $\left(-1,1\right)$ in which case the latter exists, as is proven later in Lemma \ref{lem:functional_equation_deriv}. The black dotted line is for $\varphi_0$. The red points are discussed in Chapter \ref{ch:Injectivity} and are $\varphi\left(\tau\right)$ at Chebyshev-Lobatto nodes when $\tau = -\cos\frac{j\pi}{16}$ and $j$ is an integer between $0$ and $16$ inclusive. The two orange points are $\varphi\left(-\frac{1}{2}\right) = \frac{1}{7}$ and $\varphi\left(\frac{1}{2}\right) = \frac{9}{14}$, which along with the nodal values $\varphi\left(-1\right) = 0$, $\varphi\left(0\right) = \frac{3}{8}$, and $\varphi\left(1\right) = 1$ are the only five known rational values of $\varphi$ that are discussed in the second remark following Lemma \ref{lem:convergence_characterization}.}
+\end{figure}
 
-Since $T_{2^m}$ and $\varphi_k$ are polynomials, their derivatives are also polynomials.
+\section{Differentiability}\label{sec:Differentiability}
+
+The fact that $\{\varphi_k\}$ converges uniformly to $\varphi$ per Lemma \ref{lem:convergence_characterization} does not, by itself, imply that $\{\dotvarphi{k}\}$ converges in any sense to $\dot{\varphi}$, in part because the derivative of $\varphi$ does not even exist at $-1$ and $1$ per Lemma \ref{lem:endpoint_singularities}. The purpose of this subsection is to establish rigorously that the intuition from the green line in Figure \ref{fig:core} holds on the open interval, $\left(-1,1\right)$, due to the uniform convergence of the derivatives, which can also be established using the Weierstrass M-test. Since $T_{2^m}$ and $\varphi_k$ are polynomials, their derivatives are also polynomials, although their limit as $k \uparrow \infty$ is not.
+
 \begin{definition}[Chebyshev polynomial of the second kind]
   \label{def:U}
   \leanok
@@ -311,88 +296,34 @@ U_j\left(r\right) \equiv
 \end{proof}
 
 \begin{lemma}
-  \label{lem:psi_k_derivative}
+  \label{lem:varphi_k_derivative}
   \uses{def:T, def:approx, def:U}
   $\dotvarphi[r]{k} = \frac{1}{2} \sum\limits_{m = 0}^k 4^{-m} U_{-1 + 2^m}\left(r\right)$.
 \end{lemma}
 \begin{proof}
-  Applying Lemma \ref{lem:T_derivative} to each term in the sum in Definition \ref{def:approx} yields the result.
-\end{proof}
-
-\begin{lemma}[]
-  \label{lem:derivative_bounds}
-  \uses{lem:psi_k_derivative}
-   If $t \in \mathbb{T}$, then $\frac{1}{2^{k + 1}} \leq \dotvarphi[t]{k} \leq 1 - \frac{1}{2^{k + 1}}$.
-\end{lemma}
-\begin{proof}
-  Per Lemma \ref{lem:convexity}, $\varphi_k$ is convex, so its derivative in Lemma \ref{lem:psi_k_derivative} is a non-decreasing function over $\mathbb{T}$ that is minimized at $t = -1$ and maximized at $t = 1$. It is already proven by induction in Mathlib that $U_j\left(-1\right) = \left(-1\right)^j \left(j + 1\right)$, which is apparent from Definition \ref{def:T}. Per Lemma \ref{lem:psi_k_derivative}, $\dotvarphi{k}\left(-1\right) = \frac{1}{2} - \frac{1}{2} \sum\limits_{m = 1}^k 4^{-m} 2^m = \frac{1}{2} - \frac{1}{2} \sum\limits_{m = 1}^k 2^{-m} = \frac{1}{2^{k + 1}}$ by Lemma \ref{lem:geom_sum_neg_pow} with $b = 2$. Similarly, $U_j\left(1\right) = j + 1$ and $\dotvarphi{k}\left(1\right) = \frac{1}{2} \sum\limits_{m = 0}^\infty 2^{-m} = 1 - \frac{1}{2^{k + 1}}$.
+  Applying Lemma \ref{lem:T_derivative} to each non-constant term in Definition \ref{def:approx} yields this result.
 \end{proof}
 
 \begin{lemma}
-  \label{lem:increasing}
-  \uses{def:core}
-  $\varphi$ is a strictly increasing function over $\mathbb{T}$.
+  \label{lem:derivative_convergence}
+  If $t \in \mathbb{T}$, then the sequence of partial sums, $\{\dotvarphi[t]{k}\}$ forms a uniformly Cauchy sequence.
 \end{lemma}
-
 \begin{proof}
-  \uses{lem:derivative_bounds, lem:limit}
-  Lemma \ref{lem:derivative_bounds} implies that $\varphi_k$ is a strictly increasing function over $\mathbb{T}$. The uniform limit of strictly increasing functions is a strictly increasing function, so $\varphi$ is a strictly increasing function wherever it is well-defined.
+  We utilize the Weierstrass M-test, which is sufficient to prove that the sequence of partial sums forms a uniformly Cauchy sequence. If $m = 0$, then $U_0\left(t\right) = t$ has a minimum of $-1$ and a maximum of $1$. Per Lemma \ref{lem:bounds}, if $t \in \mathbb{T}$, then $\TT[t]{m} \in \mathbb{T}$, so Lemma \ref{lem:U_composition} indicates that the range of $U_{-1 + 2^{m + 1}}$ doubles with each $m$. Thus, $U_{-1 + 2^{m + 1}}$ has a minimum of $-2^m$ and a maximum of $2^m$. Since $\left|4^{-m} U_{-1 + 2^m}\right| \leq 2^{-m}$ and $\frac{1}{2}\sum\limits_{m = 0}^\infty 2^m = 1$ per Lemma \ref{lem:geom_sum_neg_pow} with $b = 2$, as $k \uparrow \infty$, $\{\dotvarphi[t]{k}\}$ converges uniformly on $\mathbb{T}$.
 \end{proof}
 
 \begin{lemma}
-  \label{lem:contraction}
-  \uses{def:core}
-  $\psi$ is a weak contraction over $\mathbb{T}$.
-\end{lemma}
-
-\begin{proof}
-  \uses{lem:derivative_bound, lem:limit}
-  Lemma \ref{lem:derivative_bounds} implies $\varphi_k$ is Lipschitz continuous with a constant of $1 - 2^{-k - 1}$. The uniform limit of Lipschitz continuous functions is Lipschitz continuous. Although the derivative of $\psi$ does not exist at $t = 1$, the supremum of the derivative of $\varphi$ is $1$, making it a weak contraction on $\mathbb{T}$.
-\end{proof}
-
-\begin{lemma}
-  \label{lem:range}
-  \uses{def:approx, def:core}
-  If $t \in \mathbb{T}$, then $0 \leq \varphi_k\left(t\right) \leq 1$.
-\end{lemma}
-
-\begin{proof}
-  \uses{lem:convexity, lem:fixed_points, lem:geom_sum_neg_pow, lem:TT_recursion}
-  Lemma \ref{lem:convexity} implies $\varphi_k$ and $\varphi$ are increasing functions over $\mathbb{T}$, which are minimized at $t = -1$ and maximized at $t = 1$.
-  \begin{itemize}
-      \item If $t = 1$, Lemma \ref{lem:fixed_points} implies $\TT[1]{m} = 1$. Thus, Definition \ref{def:approx} specializes to $\varphi_k\left(1\right) = \threesevenths + \offset + \frac{1}{2} \sum\limits_{m = 0}^k 8^{-m} = \threesevenths + \offset + \frac{8 - 8^{-k}}{14} = 1$ by Lemma \ref{lem:geom_sum_neg_pow} with $b = 8$.
-      \item In Lemma \ref{lem:SOS}, all the recursively-defined terms in the series are the same regardless of the sign of $\TT[t]{0} = t$. Thus, $\varphi_k\left(-t\right) = \varphi_k\left(t\right) - t$ in general and in particular, $\varphi_k\left(-1\right) = 1 - 1 = 0$. 
-  \end{itemize}
-  
-\end{proof}
-\noindent Hence, the unusual constant, $\offset$, in the definition of $\varphi_k$ anchors its range to be the same for all $k$.
-
-\begin{lemma}
-  \label{lem:range_limit}
-  If $t \in \mathbb{T}$, then $0 \leq \varphi\left(t\right) \leq 1$.
+  \label{lem:weak_deriv}
+  $\lim\limits_{k \uparrow \infty} \dot{\varphi}_k$ is a weak derivative of $\varphi$ that coincides with $\dot{\varphi}$ on $\left(-1,1\right)$. 
 \end{lemma}
 \begin{proof}
-    Lemma \ref{lem:range} continues to hold as $k \uparrow \infty$ due to Lemma \ref{lem:limit}.
-\end{proof}
-
-\section{Differentiability}\label{sec:Differentiability}
-
-The fact that $\varphi_k$ converges uniformly to $\varphi$ per Lemma \ref{lem:limit} does not, by itself, imply that $\dotvarphi{k}$ converges in any sense to $\dot{\varphi}$, in part because the derivative of $\varphi$ does not even exist at $-1$ and $1$. However, the intuition from the green line in Figure \ref{fig:core} holds on the open interval, $\left(-1,1\right)$.
-
-\begin{lemma}[]
-  \label{lem:weak_derivative}
-  \uses{lem:psi_k_derivative}
-  As $k \uparrow \infty$, $\dotvarphi{k}$ converges uniformly to a weak derivative of $\varphi$ on $\mathbb{T}$.
-\end{lemma}
-\begin{proof}
-  \uses{lem:derivative_bound}
-  Lemma \ref{lem:limit} implies $\varphi_k$ converges uniformly to $\varphi$. Lemma \ref{lem:derivative_bounds} implies the sequence of functions $\dotvarphi{k}$ is squeezed from below by $\dotvarphi[-1]{k} = \frac{1}{2^{k + 1}}$ and from above by $\dotvarphi[1]{k} = 1 - \frac{1}{2^{k + 1}}$, so $\dotvarphi{k}$ converges uniformly to some function mapping $\mathbb{T}$ to $\mathbb{I}$, which justifies interchanging the limits in
+  The uniform convergence of $\{\dotvarphi[t]{k}\}$ in Lemma \ref{lem:derivative_convergence} justifies interchanging the limits in
   \begin{eqnarray*}
   \dotvarphi[t]{\infty} = \lim\limits_{h \rightarrow 0} \frac{\lim\limits_{k \uparrow \infty} \left[\varphi_k\left(t + h\right) - \varphi_k\left(t\right)\right]}{h} =
   \lim\limits_{k \uparrow \infty} \lim\limits_{h \rightarrow 0} \frac{\varphi_k\left(t + h\right) - \varphi_k\left(t\right)}{h} =
   \frac{1}{2} \sum\limits_{m = 0}^\infty 4^{-m} U_{-1 + 2^m}\left(t\right),
   \end{eqnarray*}
-  where the last line follows from Lemma \ref{lem:psi_k_derivative}. Moreover, $\dotvarphi[t]{\infty} = \dotvarphi[t]{}$ when $t \in \left(-1,1\right)$. As such, $\dotvarphi{\infty}$ is a weak derivative of $\varphi$ that coincides with its derivative wherever it exists.
+  where the last line follows from Lemma \ref{lem:varphi_k_derivative}. Per Lemma \ref{lem:convergence_characterization}, since $\{\varphi_k\left(t\right)\}$ converges to $\varphi\left(t\right)$ for at least one (actually all) value(s) of $t \in \mathbb{T}$, $\dot{\varphi}\left(t\right)$ exists on any proper \emph{subinterval} of $\mathbb{T}$.
 \end{proof}
 
 \begin{lemma}
@@ -415,17 +346,17 @@ The fact that $\varphi_k$ converges uniformly to $\varphi$ per Lemma \ref{lem:li
     &-& \left[\left(1 - r^2\right) \ddot{T}_{j - 2}\left(r\right) - r \dot{T}_{j - 2}\left(r\right) + \left(j - 2\right)^2 T_{j - 2}\left(r\right)  \right] \\
     &+& 4 \left(j - 1\right) \left[\left(1 - r^2\right) U_{j - 2}\left(r\right) +  r T_{j - 1}\left(r\right) - T_{j - 2}\left(r\right)  \right].
   \end{eqnarray*}
-  In each of the first two lines, the term in brackets is zero due to the inductive hypothesis, so we need to show that the term in brackets in the third line is also zero. It is already proven by induction in Mathlib (TODO: add succinct explanation) that $\left(1 - r^2\right) U_{j - 2}\left(r\right) = r T_{j - 1}\left(r\right) - T_{j}\left(r\right)$, so substituting and then expressing $T_{j}\left(r\right)$ via the three-term recursion yields the result.
+  In each of the first two lines, the term in brackets is zero due to the inductive hypothesis, so we need to show that the term in brackets in the third line is also zero. It is already proven by induction in Mathlib (TODO: add succinct explanation) that $\left(1 - r^2\right) U_{j - 2}\left(r\right) = r T_{j - 1}\left(r\right) - T_{j}\left(r\right)$, so substituting and then expressing $T_{j}\left(r\right)$ via the three-term recursion yields the claimed result.
 \end{proof}
 
 \begin{lemma}
-  \label{lem:second_derivative}
-  \uses{def:approx, lem:psi_k_derivative}
+  \label{lem:varphi_k_derivative_derivative}
+  \uses{def:approx, lem:varphi_k_derivative}
   If $t \in \left(-1,1\right)$, then $\ddotvarphi[t]{k} = \frac{t}{1 - t^2} \dotvarphi[t]{k} - \frac{1}{2\left(1 - t^2\right)} \sum\limits_{m = 0}^k 2^{-m} \TT[t]{m}$.
 \end{lemma}
 \begin{proof}
   \uses{lem:ODE, lem:weak_derivative, lem:geom_sum_neg_pow}
-  Differentiate Definition \ref{def:approx} twice to obtain $\ddotvarphi[t]{k} = \frac{1}{2} \sum\limits_{m = 0}^k 8^{-m} \ddot{T}_{2^m}\left(t\right)$. Substitute inside the sum using Lemma \ref{lem:ODE} after isolating $\ddot{T}_{2^m}\left(t\right)$, and then simplify using Lemma \ref{lem:psi_k_derivative}.
+  Differentiate Definition \ref{def:approx} twice to obtain $\ddotvarphi[t]{k} = \frac{1}{2} \sum\limits_{m = 0}^k 8^{-m} \ddot{T}_{2^m}\left(t\right)$. Substitute inside the sum using Lemma \ref{lem:ODE} after isolating $\ddot{T}_{2^m}\left(t\right)$, and then simplify using Lemma \ref{lem:varphi_k_derivative}.
  \end{proof}
 
 \begin{remark*}
@@ -434,16 +365,24 @@ The fact that $\varphi_k$ converges uniformly to $\varphi$ per Lemma \ref{lem:li
 
 \begin{lemma}
   \label{lem:more_convergence}
-  As $k \uparrow \infty$, $\ddotvarphi{k}$ converges uniformly to $\ddot{\varphi}$ on $\left(-1,1\right)$.
+  If $t \in \left(-1,1\right)$, then the sequence of partial sums, $\{\ddotvarphi[t]{k}\}$ forms a uniformly Cauchy sequence.
 \end{lemma}
 \begin{proof}
-  Lemma \ref{lem:weak_derivative} establishes that the first term in $\ddotvarphi[t]{k} = \frac{t}{1 - t^2} \dotvarphi[t]{k} - \frac{1}{1 - t^2} \sum\limits_{m = 0}^k 2^{-m} \TT[t]{m}$ converges uniformly on $\left(-1, 1\right)$. The same logic as in the proof of Lemma \ref{lem:summable} but now with $b = 2$ shows that the second term also converges uniformly, which justifies interchanging the limits in
+  Lemma \ref{lem:derivative_convergence} establishes that $\dotvarphi[t]{k}$ in Lemma \ref{lem:varphi_k_derivative_derivative} converges uniformly on $\mathbb{T}$. The same proof of the ``if'' direction of Lemma \ref{lem:convergence_characterization} but now with $b = 2$ shows that the other sum also converges uniformly.
+\end{proof}
+
+\begin{lemma}
+  \label{lem:weak_deriv_deriv}
+  $\lim\limits_{k \uparrow \infty} \ddot{\varphi}_k$ is a weak second derivative of $\varphi$ that coincides with $\ddot{\varphi}$ on $\left(-1,1\right)$.
+\end{lemma}
+\begin{proof}
+  The uniform convergence of $\{\ddotvarphi[t]{k}\}$ from Lemma \ref{lem:more_convergence} justifies interchanging the limits in
   \begin{eqnarray*}
   \ddotvarphi[t]{\infty} &=& \lim\limits_{h \rightarrow 0} \frac{\lim\limits_{k \uparrow \infty}\left[\dotvarphi[t + h]{k} - \dotvarphi[t]{k}\right]}{h} =
   \lim\limits_{k \uparrow \infty} \lim\limits_{h \rightarrow 0} \frac{\dotvarphi[t + h]{k} - \dotvarphi[t]{k}}{h} = \lim\limits_{k \uparrow \infty} \ddotvarphi[t]{k} \\
   &=& \frac{t}{1 - t^2} \dotvarphi[t]{\infty} + \frac{1}{2 \left(1 - t^2\right)} \sum\limits_{m = 0}^\infty 2^{-m} \TT[t]{m}.
   \end{eqnarray*}
-  Since $\dotvarphi{}$ does not exist at $-1$ or $1$, neither does $\ddotvarphi{}$ exist at those two points. Thus, $\ddotvarphi[]{\infty}$ is technically a weak second derivative that evaluates to $\infty$ when $t^2 = 1$ but otherwise coincides with $\ddotvarphi[t]{}$.
+  Since $\dot{\varphi}$ does not exist at $-1$ or $1$, neither does $\ddot{\varphi}$ exist at those two points. However, per Lemma \ref{lem:derivative_convergence}, since $\{\dotvarphi[t]{k}\}$ converges to $\dot{\varphi}\left(t\right)$ for at least one (actually all) value(s) of $t \in \left(-1,1\right)$, $\ddot{\varphi}_{\infty}$ coincides with $\ddot{\varphi}\left(t\right)$ on $\left(-1,1\right)$ and evaluates to the extended real number, $\infty$, if $t^2 = 1$.
 \end{proof}
 
 \begin{proposition}
@@ -459,10 +398,106 @@ The fact that $\varphi_k$ converges uniformly to $\varphi$ per Lemma \ref{lem:li
 \begin{remark*}
   It seems implausible for $\varphi$ to have a third derivative over any proper subinterval of $\mathbb{T}$ because differentiating once more under the sum in Lemma \ref{lem:more_convergence} would yield a term, $\sum\limits_{m = 0}^\infty U_{-1 + 2^m}\left(t\right)$, that diverges unless $t$ is a root of some $U_{-1 + 2^m}$ and thus a root of $U_{-1 + 2^{m + 1}}$ per Lemma \ref{lem:U_composition}.
 \end{remark*}
+\begin{remark*}
+  $\dotvarphi[t]{17}$ and $\ddotvarphi[t]{17}$ are less accurate near the endpoints of $\mathbb{T}$ than is $\varphi_{17}\left(t\right)$ due to the slower rates of convergence in the geometric series. But most numerical applications do not require extreme accuracy in the derivatives.
+\end{remark*}
+
+
+\section{Requisite Properties}\label{sec:RequisiteProperties}
+
+This section merely proves what is already strongly suggested by Figure \ref{fig:core}, namely that $\varphi$ is weakly convex, strictly increasing, and a weak contraction.
+
+\begin{lemma}
+  \label{lem:functional_equation_deriv}
+  $\dotvarphi[-r]{k} = 1 - \dotvarphi[r]{k}$.
+\end{lemma}
+\begin{proof}
+  Differentiate both sides of the functional equation in Lemma \ref{lem:functional_equation}.
+\end{proof}
+
+\begin{lemma}
+  \label{lem:functional_equation_deriv_deriv}
+  $\ddotvarphi[-r]{k} = \ddotvarphi[r]{k}$.
+\end{lemma}
+\begin{proof}
+  Differentiate both sides of the functional equation in Lemma \ref{lem:functional_equation_deriv}.
+\end{proof}
+
+\begin{lemma}
+  \label{lem:strictly_convex}
+  If $k > 0$, then $\varphi_k$ is a strictly convex function over $\mathbb{T}$, and if $k = 0$, then $\varphi_0$ is weakly convex over $\mathbb{T}$.
+\end{lemma}
+\begin{proof}
+  A twice-differentiable function, such as $\varphi_k$, is strictly convex on $\mathbb{T}$ if and only if its second derivative is positive on $\mathbb{T}$. Suppose on the contrary that $\ddotvarphi[t]{k} = 0$ for some $t \in \mathbb{T}$. Since $\ddot{\varphi}_k$ is an even function per Lemma \ref{lem:functional_equation_deriv_deriv}, $\ddotvarphi[-t]{k} = 0$ as well. Subtracting the latter equation from the former using the expression for the second derivative in Lemma \ref{lem:varphi_k_derivative_derivative} implies $\frac{t}{1 -t^2} \dotvarphi[t]{k} - \frac{-t}{1 - t^2} \dotvarphi[-t]{k} = \frac{1}{2 \left(1 - t^2\right)} \sum\limits_{m = 0}^k 2^{-m} \left(\TT[t]{m} - \TT[-t]{m}\right)$. The left-hand side simplifies to $\frac{t}{1 - t^2}$ under Lemma \ref{lem:functional_equation_deriv}, while the right-hand side also simplifies to $\frac{t}{1 - t^2}$ under Lemma \ref{lem:symmetry}. Together that implies that $\ddot{\varphi}_k$ would be a horizontal line at zero, which is actually the case when $k = 0$ and $\varphi_0\left(t\right) = \frac{1 + t}{2}$ is a line segment. If $k > 0$ and $t = 0$, then Lemma \ref{lem:varphi_k_derivative_derivative} implies $\ddotvarphi[0]{k} = \frac{0}{1} \dotvarphi[0]{k} - \frac{1}{2}\left(0 - \frac{1}{2} + \sum\limits_{m = 2}^k 2^{-m}\right) = 2^{-k - 1} > 0$, where the last equality follows from Lemma \ref{lem:geom_sum_neg_pow} with $b = 2$. This example contradicts the premise that $\ddot{\varphi}_k$ is a horizontal line at zero when $k > 0$ and a certifies that the second derivative is strictly positive  over $\mathbb{T}$ rather than strictly negative.
+\end{proof}
+\begin{lemma}
+  \label{lem:weakly_convex}
+  \uses{def:core}
+  $\varphi$ is a weakly convex function over $\mathbb{T}$.
+\end{lemma}
+  
+\begin{proof}
+  \uses{lem:TT_recursion}
+  Per Lemma \ref{lem:strictly_convex}, $\varphi_k$ is a strictly convex when $k > 0$, and per Lemma \ref{lem:convergence_characterization} $\{\varphi_k\}$ converges uniformly to $\varphi$. The uniform limit of a sequence of strictly convex functions is at least a weakly convex function. Although $\lim\limits_{k \uparrow \infty} 2^{-k - 1} = 0$ and $\ddot{\varphi}\left(0\right) = 0$ is an inflection point, $\ddot{\varphi}$ can never be negative on $\mathbb{T}$, so $\varphi$ is weakly convex.
+\end{proof}
+
+\begin{lemma}[]
+  \label{lem:derivative_bounds}
+  \uses{lem:varphi_k_derivative}
+   If $t \in \mathbb{T}$, then $2^{-k - 1} \leq \dotvarphi[t]{k} \leq 1 - 2^{-k - 1}$.
+\end{lemma}
+\begin{proof}
+  Per Lemma \ref{lem:strictly_convex}, $\varphi_k$ is strictly convex when $k > 0$, so its derivative in Lemma \ref{lem:varphi_k_derivative} is an increasing function over $\mathbb{T}$ that is minimized at $t = -1$ and maximized at $t = 1$ (which is also true if $k = 0$). It is already proven by induction in Mathlib that $U_j\left(-1\right) = \left(-1\right)^j \left(j + 1\right)$, which is apparent from Definition \ref{def:U}. Per Lemma \ref{lem:varphi_k_derivative}, $\dotvarphi[-1]{k} = \frac{1}{2} - \frac{1}{2} \sum\limits_{m = 1}^k 4^{-m} 2^m = \frac{1}{2} - \frac{1}{2} \sum\limits_{m = 1}^k 2^{-m} = 2^{-k - 1}$ by Lemma \ref{lem:geom_sum_neg_pow} with $b = 2$. Lemma \ref{lem:functional_equation_deriv} then implies $\dotvarphi[1]{k} = 1 - 2^{-k - 1}$.
+\end{proof}
+
+\begin{lemma}
+  \label{lem:increasing}
+  \uses{def:core}
+  $\varphi$ is a strictly increasing function over $\mathbb{T}$.
+\end{lemma}
+
+\begin{proof}
+  \uses{lem:derivative_bounds, lem:limit}
+  Per Lemma \ref{lem:derivative_bounds}, $\varphi_k$ is a strictly increasing function over $\mathbb{T}$, and per Lemma \ref{lem:convergence_characterization} $\{\varphi_k\}$ converges uniformly to $\varphi$. The uniform limit of strictly increasing functions is a strictly increasing function, so $\varphi$ is a strictly increasing function.
+\end{proof}
+
+\begin{lemma}
+  \label{lem:contraction}
+  \uses{def:core}
+  $\varphi$ is a weak contraction over $\mathbb{T}$.
+\end{lemma}
+
+\begin{proof}
+  \uses{lem:derivative_bound, lem:limit}
+  Lemma \ref{lem:derivative_bounds} implies $\varphi_k$ is Lipschitz continuous with a constant of $1 - 2^{-k - 1}$, and per Lemma \ref{lem:convergence_characterization} $\{\varphi_k\}$ converges uniformly to $\varphi$. The uniform limit of Lipschitz continuous functions is Lipschitz continuous. Although the derivative of $\varphi$ does not exist at $t = 1$, the supremum of the derivative of $\varphi$ is $1$, making it a weak contraction on $\mathbb{T}$.
+\end{proof}
+
+\begin{lemma}
+  \label{lem:range}
+  \uses{def:approx, def:core}
+  If $t \in \mathbb{T}$, then $0 \leq \varphi_k\left(t\right) \leq 1$.
+\end{lemma}
+
+\begin{proof}
+  \uses{lem:convexity, lem:fixed_points, lem:geom_sum_neg_pow, lem:TT_recursion}
+  Per Lemma \ref{lem:derivative_bounds}, $\varphi_k$ is a strictly increasing function over $\mathbb{T}$, which is minimized at $t = -1$ and maximized at $t = 1$.
+  If $t = 1$, Lemma \ref{lem:fixed_points} implies $\TT[1]{m} = 1$. Thus, Definition \ref{def:approx} specializes to $\varphi_k\left(1\right) = \threesevenths + \offset + \frac{1}{2} \sum\limits_{m = 0}^k 8^{-m} = \threesevenths + \offset + \frac{8 - 8^{-k}}{14} = 1$ by Lemma \ref{lem:geom_sum_neg_pow} with $b = 8$. Lemma \ref{lem:functional_equation} then implies $\varphi_k\left(-1\right) = 0$.
+\end{proof}
+\noindent Hence, the unusual constant, $\offset$, in Definition \ref{def:approx} anchors its range to be the same for all $k$.
+
+\begin{lemma}
+  \label{lem:range_limit}
+  If $t \in \mathbb{T}$, then $0 \leq \varphi\left(t\right) \leq 1$.
+\end{lemma}
+\begin{proof}
+    Since the bounds on $\varphi_k$ in Lemma \ref{lem:range} do not depend on $k$, they are preserved as $k \uparrow \infty$.
+\end{proof}
+
+This chapter has demonstrated that our construction threads a needle. Lemma \ref{lem:endpoint_singularities} states that $\varphi$ is technically not continuously differentiable over $\mathbb{T}$, but only because it has essential singularities at both endpoints of $\mathbb{T}$. Thus, it is more useful to focus on the facts that $\varphi$ is twice differentiable on $\left(-1,1\right)$ per Lemma \ref{lem:weak_deriv_deriv} and can be uniformly approximated by high-degree polynomials per Lemma \ref{lem:convergence_characterization}. Thus, from a numerical perspective, $\varphi$ is no different from the inverse trigonometric functions that are implemented in standard libraries, in the sense that they can be approximated to machine precision and the lack of a derivative at two or three points is a minor inconvenience.
 
 \chapter{Injectivity}\label{ch:Injectivity}
 
-The goal of this chapter is to prove that $\boldsymbol{\Psi}$ is an injective function on $\mathbb{I}^n$.
+The goal of this chapter is to prove that $\boldsymbol{\Psi}$ is an injective function on $\mathbb{I}^n$ for some $\lambda > 0$.
 
 \begin{definition}
   \label{def:Psi_vector}
@@ -478,11 +513,28 @@ The goal of this chapter is to prove that $\boldsymbol{\Psi}$ is an injective fu
   \end{bmatrix}$ is a column vector of size $n$ that holds the arguments to $f$, and $\Psi_q\left(\mathbf{x} - \frac{q}{2n}\right) \equiv \sum\limits_{p = 0}^{n - 1} \frac{\lambda^p}{\Lambda} \varphi\left(x_p - \frac{q}{2n}\right)$ in our construction from Chapter \ref{ch:CoreFunction}.
 \end{definition}
 
+\begin{figure}
+    \begin{center}
+    \caption{Some level sets of $\Psi_q\left(\begin{bmatrix} x_1 & x_2\end{bmatrix}\right)$ when $n = 2$ and $\lambda = 2\pi - 1$}
+    \label{fig:injective}
+    \includegraphics[width=0.95\linewidth]{../images/injective.png}
+    \end{center}
+    \emph{Each contour line is a level set, albeit at a different value of $x$, where $\Psi_q\left(\begin{bmatrix} x_1 & x_2 \end{bmatrix}\right) = \varphi\left(x - \frac{q}{2n}\right)$.}
+\end{figure}
+
+When $n = 2$, we can illustrate the issue as in Figure \ref{fig:injective}. For each of the five values of $q$, contour lines are plotted that depict pairs of values for $x_1$ and $x_2$ where $\Psi_q\left(\begin{bmatrix} x_1 & x_2 \end{bmatrix}\right) = \varphi\left(x - \frac{q}{2n}\right)$ for various values of $x$. Sprecher's mechanism of shifting $x_p$ by $-\frac{q}{2n}$ ensures that these contour lines are largely parallel to each other. Pairs of contour lines can and do intersect, but the KST cannot hold if all $2n + 1$ functions intersect at the same $\mathbf{x}$. There are an infinite number of level sets, each corresponding to a different value of $x$, so it is impossible to determine visually whether this condition is met. However, at the top right of the last plot, these contour lines are compressed into a small region, so the exact nature of the curvature there is important.
+
+The contour lines are downward sloping and cross the diagonal, which justifies thinking of a level set as all possible vectors $\mathbf{x}$ that render $\Psi_q\left(\mathbf{x}\right)$ equal to $\varphi\left(x - \frac{q}{2n}\right)$, which is the value that $\Psi_q$ would take if all its arguments were equal to $x$. Sprecher
+\begin{quote}
+What this says about the superposition representation of an arbitrary continuous function $f\left(x_1, x_2\right)$ is that it is determined at five points on the diagonal through its representation \dots
+The first thing to notice is the relation between the level sets of superpositions and target functions. An arbitrary function $f\left(x_1, x_2\right)$ may have infinitely many values on one or or more level sets \dots But on these the functions $\left[\Psi_q\right]$ can only compute one value of $f$. [78 - 79]
+\end{quote}
+
 \section{Linear Algebra}\label{sec:LinearAlgebra}
 
 \begin{definition}[Weak Jacobian matrix]
   \label{def:J}
-  Let $\mathbf{J}\left(\mathbf{x}\right)$ be a matrix with $2n + 1$ rows and $n$ columns such that each element is $J_{q,p} \equiv \lambda_p \dotvarphi[x_p - \frac{q}{2n}]{\infty} = \frac{\lambda^p}{2\Lambda} \sum\limits_{m = 0}^\infty 4^{-m} U_{-1 + 2^m}\left(x_p - \frac{q}{2n}\right)$ per Lemma \ref{lem:weak_derivative}.
+  Let $\mathbf{J}\left(\mathbf{x}\right)$ be a matrix with $2n + 1$ rows and $n$ columns such that each element is $J_{q,p} \equiv \lambda_p \dotvarphi[x_p - \frac{q}{2n}]{\infty} = \frac{\lambda^p}{2\Lambda} \sum\limits_{m = 0}^\infty 4^{-m} U_{-1 + 2^m}\left(x_p - \frac{q}{2n}\right)$ per Lemma \ref{lem:weak_deriv}.
 \end{definition}
 \begin{remark*}
   $\mathbf{J}\left(\mathbf{x}\right)$ in Definition \ref{def:J} can be evaluated at a point in $\mathbb{I}^n$ even when $\frac{\partial \Psi_q}{\partial x_p}$ is not defined, which occurs either when both $x_p = 1$ and $q = 0$ or when both $x_p = 0$ and $q = 2n$. Otherwise, $\mathbf{J}\left(\mathbf{x}\right)$ is a traditional Jacobian matrix because the weak derivative coincides with the derivative.
@@ -496,21 +548,15 @@ The goal of this chapter is to prove that $\boldsymbol{\Psi}$ is an injective fu
   The $p$-th column of $\mathbf{J}\left(\mathbf{x}\right)$ is a nonlinear function only of $x_p$, so it is impossible to express any column as an exact linear function of the other columns.
 \end{proof}
 
+\begin{proposition}
+  $\boldsymbol{\Psi}$ is an injective function on $\mathbb{I}^n$ for any $\lambda > 0$
+\end{proposition}
+\begin{proof}
+  Lemma \ref{lem:full_rank} suffices to prove that $\boldsymbol{\Psi}$ is \emph{locally} injective throughout the interior of $\mathbb{I}^n$. Thus, we only need to rule out some global and boundary concerns. Per Lemma \ref{lem:contraction}, $\varphi$ is Lipschitz continuous and so is each $\psi_{p,q}$. Lipschitz continuous functions are absolutely continuous and so the Fundamental Theorem of Calculus applies. Suppose on the contrary that $\boldsymbol{\Psi}\left(\mathbf{x}\right) = \boldsymbol{\Psi}\left(\mathbf{x}^\prime\right)$ but $\mathbf{x} \neq \mathbf{x}^\prime$. There is a smooth path between $\mathbf{x}$ and $\mathbf{x}^\prime$. Integrating the directional derivatives along that path should yield a value zero, but cannot be zero since $\mathbf{J}\left(\mathbf{x}\right)$ has full column rank.
+\end{proof}
 \begin{remark*}
-  Lemma \ref{lem:full_rank} suffices to prove that $\boldsymbol{\Psi}$ is \emph{locally} injective throughout $\mathbb{I}^n$, so we only need to rule out some \emph{global} concerns that arise from the fact that the weak Jacobian matrix is not square. Kahane proves that if there were fewer than $2n + 1$ rows in the output, then almost no mapping from $\mathbb{I}^n$ would be globally injective and thus the KST would not hold, which is a result that is usually credited to Sternfeld a few years later. In addition, Whitney previously proved that a smooth mapping from a space of dimension $n$ to a space of dimension $2n + 1$ can be further embedded into a space of dimension $2n$, which provides some intuition for Vitushkin and Khenkin's result that the KST cannot hold if all the inner functions were continuously differentiable.
+  I am not entirely sure how the details of the previous ``proof'' would work, so below is another proof that is very consistent with the KST literature.
 \end{remark*}
-
-
-%\begin{lemma}
-%  \label{lem:Psi_q_range}
-%  \uses{def:Psi_q}
-%  The range of $\Psi_q$ is $\left[\varphi\left(-\frac{q}{2n}\right), \varphi\left(1 - \frac{q}{2n}\right)\right] \subset \mathbb{I}$.
-%\end{lemma}
-%\begin{proof}
-%  \uses{lem:range}
-%  If $x_p = 0$ for all $p$, then $\Psi_q\left(\mathbf{0}\right) = \sum\limits_{p = 1}^n \frac{\lambda^{p - 1}}{\Lambda} \varphi\left(0 - \frac{q}{2n}\right) = \varphi\left(-\frac{q}{2n}\right)$ using Definitions \ref{def:Lambda} and \ref{def:lambda_p}. Similarly if $x_p = 1$ for all $p$, then $\Psi_q\left(\mathbf{1}\right) = \varphi\left(1 - \frac{q}{2n}\right)$.
-%\end{proof}
-
 
 \section{Trigonometric Representation}\label{sec:TrigonometricRepresentation}
 
@@ -538,25 +584,23 @@ Under Definition \ref{def:core} and Lemma \ref{lem:trigonometric}, $\threesevent
   \uses{lem:trigonometric}
   If $\tau = -\cos\frac{j\pi}{2^k}$, then $\TT[\tau]{k} = \cos\left(2^k \cos^{-1}\left(\cos \frac{-j\pi}{2^k}\right)\right) = \cos\left(-j\pi\right)$. If $j$ is even, $\TT[\tau]{k} = 1$ and if $j$ is odd $\TT[\tau]{k} = -1$.
 \end{proof}
-The function approximation literature also defines nodes when the index of the Chebyshev polynomial is not a power of two, but we only consider nodes of the form $\tau \equiv -\cos\frac{j\pi}{2^k}$.
+The function approximation literature also defines nodes when the index of the Chebyshev polynomial is not a power of two, but we only consider the case where $\tau = -\cos\frac{j\pi}{2^k}$. It is essential to recognize that if $\tau = -\cos\frac{j\pi}{2^k}$, then it is also true that $\tau = -\cos\frac{\left(2j\right)\pi}{2^{k + 1}}$. Thus, a node at iteration $k$ is also a node at iteration $k + 1$ but with an index that is double its previous index.
 
 \begin{definition}[$\gamma$-nodes]
   \label{def:gamma_nodes}
   Let $\gamma = -\cos\frac{\left(3j + 1\right)\pi}{2^{k - 1} \times 3}$ for some $0 \leq j \leq 2^{k - 1}$ and $k > 0$.
 \end{definition}
 
-The orange points in Figure \ref{fig:core} are the values of $\varphi\left(\mp \frac{1}{2}\right)$, whose argument $-\cos\frac{\pi}{3}$ and $-\cos\frac{2\pi}{3}$ respectively is a $\gamma$-node when $k = 1$. The red points in Figure \ref{fig:core} are the values of $\varphi$ at Chebyshev-Lobatto nodes when $k = 4$, which crucially can be calculated \emph{exactly} in a finite number of arithmetic operations from $\varphi_4$ or better.
+The orange points in Figure \ref{fig:core} are the values of $\varphi\left(\mp \frac{1}{2}\right)$, whose argument $-\cos\frac{\pi}{3} = -\frac{1}{2}$ and $-\cos\frac{2\pi}{3} = \frac{1}{2}$ is a $\gamma$-node when $k = 1$; see the second remark following Lemma \ref{lem:convergence_characterization}. The red points in Figure \ref{fig:core} are the values of $\varphi$ at Chebyshev-Lobatto nodes when $k = 4$, which crucially can be calculated \emph{exactly} in a finite number of arithmetic operations from $\varphi_4$ or better.
 
 \begin{lemma}[Zero approximation error]
   \label{lem:magic}
   \uses{def:approx, def:core}
-  $\varphi_k\left(t\right) = \varphi\left(t\right)$ if and only if $t = -\cos\frac{j\pi}{2^k}$.
+  If $\tau = -\cos\frac{j\pi}{2^k}$, then $\varphi_k\left(\tau\right) = \varphi\left(\tau\right)$.
 \end{lemma}
 \begin{proof}
   \uses{lem:fixed_points, lem:geom_sum_neg_pow}
-  If $\tau = -\cos\frac{j\pi}{2^k}$, then Lemma \ref{lem:nodes} implies $\TT[\tau]{k} = \mp 1$, and Lemma \ref{lem:fixed_points} implies $\TT[\tau]{k + 1} = 1$ is a fixed point. By Lemma \ref{lem:geom_sum_neg_pow} with $b = 8$, $\varphi\left(\tau\right) = \threesevenths + \halfsum{0}{k}{\tau} + \frac{1}{2}\sum\limits_{m = k + 1}^\infty 8^{-m} = \threesevenths + \halfsum{0}{k}{\tau} + \offset = \varphi_k\left(\tau\right)$.
-  
-  Conversely, if $\gamma = -\cos\frac{\left(3j + 1\right)\pi}{2^{k - 1} \times 3}$, then $\TT[\gamma]{k - 1} = -\cos \frac{\left(3j + 1\right) \pi}{3} = \mp \frac{1}{2}$ and Lemma \ref{lem:fixed_points} implies $\TT[\gamma]{k}$ reaches the other fixed point. Although Lemma \ref{lem:geom_sum_neg_pow} implies $\varphi\left(\gamma\right) = \threesevenths + \halfsum{0}{k - 1}{\gamma} - \frac{1}{4}\sum\limits_{m = k}^\infty 8^{-m} = \threesevenths + \halfsum{0}{k - 1}{\gamma} - \frac{8^{-k}}{28}$ can be computed in a finite number of arithmetic operations, the result differs by a constant from $\varphi_k\left(\gamma\right)$. At any other point in $\mathbb{T}$, $\varphi$ cannot be computed in a finite number of operations.
+  If $\tau = -\cos\frac{j\pi}{2^k}$, then Lemma \ref{lem:nodes} implies $\TT[\tau]{k} = \mp 1$, and Lemma \ref{lem:fixed_points} implies $\TT[\tau]{k + 1} = 1$ is a fixed point. By Lemma \ref{lem:geom_sum_neg_pow} with $b = 8$, $\varphi\left(\tau\right) = \threesevenths + \halfsum{0}{k}{\tau} + \frac{1}{2}\sum\limits_{m = k + 1}^\infty 8^{-m} = \threesevenths + \halfsum{0}{k}{\tau} + \offset = \varphi_k\left(\tau\right)$. Thus, the first-order correction, $\offset$, is exact when $\tau$ is a node.
 \end{proof}
 
 \section{Number Theory}\label{sec:NumberTheory}
@@ -589,60 +633,53 @@ $U_{-1 + 2^k}$ factors into a product of irreducible polynomials, each of which 
 
 \begin{definition}[Maximal real cyclotomic extension of $\mathbb{Q}$ for power-of-2 roots of unity]
   \label{def:F}
-  Let $\mathbb{F} \equiv \mathbb{R} \bigcap \bigcup\limits_{k = 1}^\infty \mathbb{Q}\left(\zeta_{2^k}\right)$, where $\zeta_{2^k}$ is some root of $\Phi_{2^k}$.
+  Let $\mathbb{F}_\tau \equiv \mathbb{R} \bigcap \bigcup\limits_{k = 1}^\infty \mathbb{Q}\left(\zeta_{2^k}\right)$, where $\zeta_{2^k}$ is some root of $\Phi_{2^k}$.
 \end{definition}
-
-\begin{lemma}
-  \label{lem:in_F}
-  If $r \in \mathbb{F}$, then $\varphi_k\left(r\right) \in \mathbb{F}$.
-\end{lemma}
-\begin{proof}
-  For any finite $k$, it is apparent from Definition \ref{def:approx} that $\varphi_k$ is a rational function because it only involves a finite number of arithmetic operations, so $\varphi_k\left(r\right)$ remains in the same field as $r$.
-\end{proof}
-
-\begin{remark*}
-  If $x_p - \frac{q}{2n} = -\cos\frac{j\pi}{2^k}$ and $x_p^\prime - \frac{q}{2n} = -\cos \frac{j^\prime \pi}{2^k}$ with $x_p > x_p^\prime$, then $\varphi_k\left(x_p - \frac{q}{2n}\right) - \varphi_k\left(x_p^\prime - \frac{q}{2n}\right) \in \mathbb{F}$. By the Mean Value Theorem, there exists a $t \in \left(x_p^\prime - \frac{q}{2n}, x_p - \frac{q}{2n}\right)$ (which is unique because $\varphi_k$ is increasing) such that $\dotvarphi[t]{k} = \frac{\varphi_k\left(x_p - \frac{q}{2n}\right) - \varphi_k\left(x_p^\prime - \frac{q}{2n}\right)}{x_p - x_p^\prime}$. Although $\dotvarphi[t]{k} \in \mathbb{F}$ necessarily, it seems if $k > 1$ that $t \notin \mathbb{F}$. Thus, $\dotvarphi{k}$ can map some foreign numbers on $\mathbb{T}$ into $\mathbb{F}$.
-\end{remark*}
 
 \begin{lemma}
   \label{lem:injective}
   \uses{def:Psi_q, def:F}
-  If $\lambda \notin \mathbb{F}$, then $\Psi_q$ is an injective function on nodes.
+  If $\lambda \notin \mathbb{F}_\tau$, then $\Psi_q$ is an injective function on $\left(\mathbb{F}_\tau \bigcap \mathbb{I}\right)^n$.
 \end{lemma}
 \begin{proof}
   \uses{lem:magic}
-  For a sufficiently large $k$, assume $x_p - \frac{q}{2n}$ is some node for each $p$ (not necessarily the same node) and similarly assume $x_p^\prime - \frac{q}{2n}$ is also some node for each $p$. If $\Psi_q\left(x_0, x_1, \cdots, x_{n - 1}\right) = \Psi_q\left(x_1^\prime, x_2^\prime, \dots, x_n^\prime\right)$, then we can rearrange this condition using Definition \ref{def:Psi_q} as
+  Let each $x_p - \frac{q}{2n}$ and $x_p^\prime - \frac{q}{2n}$ be a member of $\mathbb{F}_\tau \bigcap \mathbb{I}$. Suppose $\Psi_q\left(x_0, x_1, \cdots, x_{n - 1}\right) = \Psi_q\left(x_1^\prime, x_2^\prime, \dots, x_n^\prime\right)$ and rearrange this condition as
   \begin{eqnarray*}
-      \frac{\varphi\left(x_0 - \frac{q}{2n}\right) - \varphi\left(x_0^\prime - \frac{q}{2n}\right)}{\Lambda} &=& \frac{\sum\limits_{p = 1}^{n - 1}\lambda^p \left[\varphi\left(x_p^\prime - \frac{q}{2n}\right) - \varphi\left(x_p - \frac{q}{2n}\right)\right]}{\Lambda}, \\
-      \varphi_k\left(x_0 - \frac{q}{2n}\right) - \varphi_k\left(x_0^\prime - \frac{q}{2n}\right) &=& \sum\limits_{p = 1}^{n - 1}\lambda^p \left[\varphi_k\left(x_p^\prime - \frac{q}{2n}\right) - \varphi_k\left(x_p - \frac{q}{2n}\right)\right],
+      \frac{\varphi\left(x_0 - \frac{q}{2n}\right) - \varphi\left(x_0^\prime - \frac{q}{2n}\right)}{\Lambda} &=& \frac{\sum\limits_{p = 1}^{n - 1}\lambda^p \left[\varphi\left(x_p^\prime - \frac{q}{2n}\right) - \varphi\left(x_p - \frac{q}{2n}\right)\right]}{\Lambda}.
+  \end{eqnarray*}  
+  Suppose, on the contrary, that $\Psi_q$ is not injective, which is to say that the above equation has a non-trivial solution. Then, the Mean Value Theorem states for a function like $\varphi$ that is continuous on a closed interval (per Lemma \ref{lem:continuity}) and differentiable on the open interval that excludes its endpoints (per Lemma \ref{lem:weak_deriv}), there exists a $t_0$ strictly between $x_0 - \frac{q}{2n}$ and $x_0^\prime - \frac{q}{2n}$ such that $\varphi\left(x_0 - \frac{q}{2n}\right) - \varphi\left(x_0^\prime - \frac{q}{2n}\right) = \left[x_0 - \frac{q}{2n} - x_0^\prime + \frac{q}{2n}\right] \dot{\varphi}\left(t_0\right)$. Moreover, $t_0$ is unique in this case because $\varphi$ is a strictly increasing function on $\mathbb{T}$ per Lemma \ref{lem:increasing}. After canceling the $\Lambda$ from the above equation, substituting with the Mean Value Theorem, and dividing both sides by $\dot{\varphi}\left(t_0\right)$, we obtain
+  \begin{eqnarray*}
+      x_0 - x_0^\prime &=& \frac{1}{\dot{\varphi}\left(t_0\right)}\sum\limits_{p = 1}^{n - 1}\lambda^p \left[\varphi\left(x_p^\prime - \frac{q}{2n}\right) - \varphi\left(x_p - \frac{q}{2n}\right)\right].
   \end{eqnarray*}
-  where Lemma \ref{lem:magic} allows us to substitute $\varphi_k$ for $\varphi$ in the second line. On the left-hand side, $\varphi_k\left(x_1 - \frac{q}{2n}\right) - \varphi_k\left(x_1^\prime - \frac{q}{2n}\right) \in \mathbb{F}$ per Lemma \ref{lem:in_F}. The right-hand side is zero if and only if $x_p = x_p^\prime$ for all $p \geq 2$ but in general is a number from the extension field $\mathbb{F}\left(\lambda\right)$. The two sides cannot be equal unless the former is also zero, i.e., $x_p = x_p^\prime$ for all $p$, which characterizes an injective function.
-\end{proof}
-
-\begin{lemma}
-  \label{lem:dense}
-  Chebyshev-Lobatto nodes are dense in $\mathbb{T}$.
-\end{lemma}
-\begin{proof}
-  First note that $\int\limits_{-1}^1 \frac{1}{\pi \sqrt{1 - t^2}} dt = \frac{\sin^{-1}\left(1\right)}{\pi} + \frac{1}{2} - \frac{\sin^{-1}\left(-1\right)}{\pi} - \frac{1}{2} = 1$, so $\frac{\sin^{-1} t}{\pi} + \frac{1}{2}$ can be interpreted as a Cumulative Density Function that yields the probability of a random variable whose sample space is $\mathbb{T}$ being less than or equal to $t$. Since $\sin\left(\frac{\pi}{2} - y\right) = \cos y$, $\sin^{-1}\left(\cos y\right) = \frac{\pi}{2} - y$. If $\tau = \cos \frac{-j\pi}{2^k}$ for some $0 \leq j \leq 2^k$, then $\frac{\sin^{-1}\left(\tau\right)}{\pi} + \frac{1}{2} = 1 - \frac{j}{2^k}$ is the probability of a node being less than or equal to $\cos\frac{-j\pi}{2^k}$. By symmetry $\frac{j}{2^k}$ is the probability of a node being less than or equal to $-\cos \frac{j\pi}{2^k}$, the Probability Density Function for nodes is $\frac{1}{\pi \sqrt{1 - t^2}} > 0$, and a random node can be obtained by applying the sine function to a uniform random variate between $-\frac{\pi}{2}$ and $\frac{\pi}{2}$.
-\end{proof}
-
-
-\begin{proposition}
-  \label{prop:injective}
-  \uses{def:Psi_q}
-  If $\lambda > 0$ is transcendental, then $\Psi_q$ is an injective function on $\mathbb{I}^n$ for each $q$.
-\end{proposition}
-\begin{proof}
-  \uses{lem:injective}
-  It is mostly due to Lemmas \ref{lem:increasing}, \ref{lem:dense} and \ref{lem:injective}. Possibly the other fixed points from Lemma \ref{lem:fixed_points} are sufficient to demonstrate this?
+  The left-hand side is a member of $\mathbb{F}_\lambda$, which cannot be equal to the right-hand side when $\lambda \notin \mathbb{F}_\tau$ because the latter is a member of $\mathbb{F}_\tau\left(\lambda, \dot{\varphi}\left(t_0\right)\right) / \mathbb{F}_\tau$. Thus, there is only a trivial solution to the original equation where $x_p = x_p^\prime$ for all $p$, which characterizes an injective function.
 \end{proof}
 
 \begin{remark*}
-Sprecher and others use essentially the same trick when constructing inner functions that yield rational values when evaluated at rational arguments, so irrational values of $\lambda_p$ ensure injectivity. In our case, a node is already irrational unless it is among the integers $-1$, $0$, or $1$, and $\varphi\left(\tau\right)$ is already irrational unless it is among $\varphi\left(-1\right) = 0$, $\varphi\left(0\right) = \frac{3}{8}$, or $\varphi\left(1\right) = 1$. However, $\tau \in \mathbb{F}$, as is $\varphi\left(\tau\right) = \varphi_k\left(\tau\right)$. Since $\mathbb{F}$ is an infinite extension of $\mathbb{Q}$, our $\lambda$ must be transcendental rather than merely irrational.
+  Suppose $x_p - \frac{q}{2n} = -\cos \frac{j\pi}{2^k}$ and $x_p^\prime - \frac{q}{2n} = -\cos \frac{j^\prime\pi}{2^k}$, in which case the Mean Value Theorem implies there is a (in this case unique) $t_p$ strictly between $x_p - \frac{q}{2n}$ and $x_p^\prime - \frac{q}{2n}$ such that $\left[x_p - x_p^\prime\right]\dot{\varphi}\left(t_p\right) = \varphi_k\left(x_p - \frac{q}{2n}\right) - \varphi_k\left(x_p^\prime - \frac{q}{2n}\right)$, where we have used Lemma \ref{lem:magic} to substitute $\varphi_k$ for $\varphi$. Although $\dot{\varphi}\left(t_p\right) \in \mathbb{F}_\tau$ because $x_p - x_p^\prime \in \mathbb{F}_\tau$ and $\varphi_k\left(x_p - \frac{q}{2n}\right) - \varphi_k\left(x_p^\prime - \frac{q}{2n}\right) \in \mathbb{F}_\tau$, it seems that $t_p \notin \mathbb{F}_\tau$ when $k > 1$. Thus, $\dotvarphi{k}$ can somehow map some foreign numbers in $\mathbb{T}$ into $\mathbb{F}_\tau$.
 \end{remark*}
 
+\begin{proposition}
+For some $\lambda > 0$, $\boldsymbol{\Psi}$ is an injective function on $\mathbb{I}^n$.    
+\end{proposition}
+\begin{proof}
+The fact that $\boldsymbol{\Psi}$ is injective on a dense set, $\left(\mathbb{F}_\tau \bigcap \mathbb{I}\right)^n$, and is both convex (since it is a weighed sum of convex inner functions) and continuous allows us to do a proof by contradiction.
+\end{proof}
+
+%\begin{lemma}
+%  \label{lem:dense}
+%  Chebyshev-Lobatto nodes are dense in $\mathbb{T}$.
+%\end{lemma}
+%\begin{proof}
+%  First note that $\int\limits_{-1}^1 \frac{1}{\pi \sqrt{1 - t^2}} dt = \frac{\sin^{-1}\left(1\right)}{\pi} + \frac{1}{2} - \frac{\sin^{-1}\left(-1\right)}{\pi} - \frac{1}{2} = 1$, so $\frac{\sin^{-1} t}{\pi} + \frac{1}{2}$ can be interpreted as a Cumulative Density Function that yields the probability of a random variable whose sample space is $\mathbb{T}$ being less than or equal to $t$. Since $\sin\left(\frac{\pi}{2} - y\right) = \cos y$, $\sin^{-1}\left(\cos y\right) = \frac{\pi}{2} - y$. If $\tau = \cos \frac{-j\pi}{2^k}$ for some $0 \leq j \leq 2^k$, then $\frac{\sin^{-1}\left(\tau\right)}{\pi} + \frac{1}{2} = 1 - \frac{j}{2^k}$ is the probability of a node being less than or equal to $\cos\frac{-j\pi}{2^k}$. By symmetry $\frac{j}{2^k}$ is the probability of a node being less than or equal to $-\cos \frac{j\pi}{2^k}$, the Probability Density Function for nodes is $\frac{1}{\pi \sqrt{1 - t^2}} > 0$, and a random node can be obtained by applying the sine function to a uniform random variate between $-\frac{\pi}{2}$ and $\frac{\pi}{2}$.
+%\end{proof}
+
 \chapter{Outer Functions}\label{ch:OuterFunctions}
+
+This chapter currently contains some disconnected fragments of thoughts.
+
+Kahane proves that if there were fewer than $2n + 1$ rows in the output, then almost no mapping from $\mathbb{I}^n$ would be injective and thus the KST would not hold, which is a result that is usually credited to Sternfeld a few years later. In addition, Whitney previously proved that a smooth mapping from a space of dimension $n$ to a space of dimension $2n + 1$ can be further embedded into a space of dimension $2n$, which provides some intuition for Vitushkin and Khenkin's result that the KST cannot hold if all the inner functions were continuously differentiable.
+
+Kaufman proves a mercifully short proof that the KST cannot hold if the genuine Jacobian matrix is of full rank, but this proof presumes on the equicontinuity of the inner functions, which does not hold in our case because $\psi_{p,q} \notin C^1\left(\mathbb{I}\right)$ if $q = 0$ or $q = 2n$ (per Proposition \ref{prop:q=0}), while $\psi_{p,q} \in C^2\left(\mathbb{I}\right)$ otherwise (per Proposition \ref{prop:C2}). So, the question becomes is equicontinuity actually necessary for Kaufman's theorem?
 
 The number of distinct outer functions can also be reduced to one by shifting the argument.
 \begin{definition}
@@ -697,6 +734,9 @@ Kahane's geometric interpretation of the KST goes like this. Let $\Gamma_p$ deno
 
 Then $\chi_q\left(\gamma\left(\Psi_q\left(x_0, x_1, \cdots, x_{n - 1}\right)\right)\right) = \sum\limits_{j = 0}^\infty \widehat{a}_j e^{2\pi \imath j \left(\gamma\left(\Psi_q\left(x_0, x_1, \cdots, x_{n - 1}\right)\right) + q\right)} = \sum\limits_{j = 0}^\infty \widehat{a}_j e^{2\pi \imath j \left(\gamma\left(\Psi_q\left(x_0, x_1, \cdots, x_{n - 1}\right)\right)\right)}$ because it is periodic. In practice, we would have to estimate a (truncated) sequence of coefficients to calibrate to a particular target function.
 
+\chapter{Open Problems}\label{ch:OpenProblems}
+
+There are several that I have not written up yet.
 
 \bibliographystyle{plain} % Choose your preferred citation style
 \bibliography{references}  % Name of your BibTeX file
